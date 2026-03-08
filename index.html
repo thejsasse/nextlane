@@ -191,7 +191,7 @@ function MobileFrame({children}){
 /* ══════════════════════════════════════════════
    QR UNBOXING SEQUENCE
 ══════════════════════════════════════════════ */
-function QRUnboxFlow({mobile}){
+function QRUnboxFlow({mobile,setView}){
   const [phase,setPhase]=useState(()=>{
     const params=new URLSearchParams(window.location.search);
     const id=params.get("id");
@@ -312,7 +312,7 @@ function QRUnboxFlow({mobile}){
               <div className="mono" style={{fontSize:9,color:`${G}88`,marginTop:2}}>NL-NWA-2025-0047</div>
             </div>
           </div>
-          <button className="btn-gold" onClick={()=>setPhase("scan")} style={{padding:"14px 0",borderRadius:12,fontSize:12,width:"100%",boxShadow:`0 6px 24px ${G}44`}}>Accept My Golden Ticket →</button>
+          <button className="btn-gold" onClick={()=>setView("talent")} style={{padding:"14px 0",borderRadius:12,fontSize:12,width:"100%",boxShadow:`0 6px 24px ${G}44`}}>Accept My Golden Ticket →</button>
           <button className="btn-ghost" onClick={()=>setPhase("scan")} style={{padding:"10px 0",borderRadius:12,fontSize:11,width:"100%",marginTop:8}}>↺ Replay Unboxing</button>
         </div>
       )}
@@ -2066,7 +2066,7 @@ function App(){
 
   const content=(
     <>
-      {view==="qr"        && <QRUnboxFlow   mobile={mobile}/>}
+      {view==="qr"        && <QRUnboxFlow   mobile={mobile} setView={setView}/>}
       {view==="talent"    && <TalentFlow    mobile={mobile}/>}
       {view==="scout"     && <ScoutFlow     mobile={mobile}/>}
       {view==="recruiter" && <RecruiterFlow mobile={mobile}/>}
