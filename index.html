@@ -47,6 +47,8 @@ body{font-family:'DM Sans',sans-serif;background:#0B1628;color:white;overflow:hi
 @keyframes radarDraw{0%{stroke-dashoffset:1000}100%{stroke-dashoffset:0}}
 @keyframes compareSlideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(201,168,76,.4)}70%{box-shadow:0 0 0 10px rgba(201,168,76,0)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}}
+@keyframes verifiedRingPulse{0%{box-shadow:0 0 0 0 rgba(201,168,76,.55),0 0 0 0 rgba(201,168,76,.2)}50%{box-shadow:0 0 0 5px rgba(201,168,76,.18),0 0 0 10px rgba(201,168,76,.07)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0),0 0 0 0 rgba(201,168,76,0)}}
+.verified-ring{animation:verifiedRingPulse 2.4s ease infinite;border:2px solid #C9A84C !important}
 @keyframes cardFlipHalf{0%{transform:perspective(800px) rotateY(0)}100%{transform:perspective(800px) rotateY(90deg)}}
 
 .fade-up{animation:fadeUp .42s ease forwards}
@@ -190,7 +192,19 @@ function MobileFrame({children}){
    QR UNBOXING SEQUENCE
 ══════════════════════════════════════════════ */
 function QRUnboxFlow({mobile}){
-  const [phase,setPhase]=useState("scan"); // scan → ripple → envelope → reveal → landing
+  const [phase,setPhase]=useState(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const id=params.get("id");
+    return id?"reveal":"scan";
+  });
+  const [prefilledName]=useState(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const id=params.get("id");
+    if(!id)return null;
+    // decode name from ID like "MariaG-0047"
+    const raw=id.split("-")[0];
+    return raw.replace(/([A-Z])/g," $1").trim();
+  });
   const tiltRef=useRef();
   const tilt=useTilt(tiltRef);
 
@@ -280,8 +294,10 @@ function QRUnboxFlow({mobile}){
       {/* ── PHASE: LANDING ── */}
       {phase==="landing"&&(
         <div className="fade-up" style={{maxWidth:400,width:"100%",textAlign:"center"}}>
-          <div style={{width:68,height:68,background:`${G}22`,borderRadius:"50%",margin:"0 auto 18px",border:`1px solid ${G}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <img src="https://i.pravatar.cc/52?img=12" style={{width:52,height:52,borderRadius:"50%"}} alt="scout"/>
+          <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 18px",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+            <img src="https://i.pravatar.cc/52?img=12" className="verified-ring" style={{width:56,height:56,borderRadius:"50%"}} alt="scout"/>
+            <div style={{position:"absolute",top:-4,left:-4,right:-4,bottom:-4,borderRadius:"50%",border:`1px solid ${G}33`,animation:"verifiedRingPulse 2.4s ease infinite 0.4s"}}/>
+            <div style={{position:"absolute",bottom:2,right:2,width:18,height:18,background:`linear-gradient(135deg,${G},${GL})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,zIndex:2}}>✓</div>
           </div>
           <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GHV,marginBottom:10}}>James Whitfield · SVP Operations, Walmart</div>
           <h1 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?32:40,fontWeight:600,lineHeight:1.15,color:CR,marginBottom:14}}>
@@ -360,7 +376,7 @@ function RadarChart({scores,size=140,color=G,animated=true}){
         )})}
         {[0,1,2,3].map(i=>{const p=pt(i,1.3);return(
           <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
-            fill={raw[i]>0?"#C8C0B0":"#6A6060"} fontSize="8" fontFamily="DM Sans">{TLABELS[i]}</text>
+            fill={raw[i]>0?"#C8C0B0":"#6A6060"} fontSize="10" fontFamily="DM Sans" fontWeight="600">{TLABELS[i]}</text>
         )})}
       </svg>
       {isEmpty&&(
@@ -658,12 +674,20 @@ function MeetingFunnel({talent,onClose}){
     <div style={{position:"fixed",inset:0,background:"rgba(11,22,40,.9)",backdropFilter:"blur(8px)",zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
       <div className="fade-up" style={{background:NM,border:`1px solid ${G}44`,borderRadius:20,padding:32,maxWidth:480,width:"100%",maxHeight:"90vh",overflowY:"auto"}}>
         {/* header */}
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
           <div>
             <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:GHV,marginBottom:4}}>Meeting Request</div>
             <div style={{fontFamily:"Cormorant Garamond",fontSize:22,color:CR}}>{talent.name}</div>
           </div>
           <button onClick={onClose} style={{background:"none",border:"none",color:`${CR}55`,cursor:"pointer",fontSize:22,lineHeight:1}}>×</button>
+        </div>
+        {/* success probability badge */}
+        <div style={{background:`linear-gradient(135deg,${G}12,${G}06)`,border:`1px solid ${G}33`,borderRadius:10,padding:"10px 14px",marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:32,height:32,background:`linear-gradient(135deg,${GD},${G})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,flexShrink:0}}>⚡</div>
+          <div>
+            <div style={{fontSize:11,color:GL,fontWeight:600}}>NextLane candidates are <span style={{color:G}}>4× more likely</span> to accept an offer</div>
+            <div style={{fontSize:10,color:`${CR}55`,marginTop:1}}>vs. traditional applicants · based on NWA cohort data</div>
+          </div>
         </div>
 
         {/* funnel steps indicator */}
@@ -817,6 +841,7 @@ function RecruiterFlow({mobile}){
   const [cardView,setCardView]=useState({}); // 'radar' | 'timeline' | null per card
   const [compareTargets,setCompareTargets]=useState([]); // up to 2 talent ids
   const [showCompare,setShowCompare]=useState(false);
+  const [privacyShieldActive,setPrivacyShieldActive]=useState(true);
 
   const toggleCompare=id=>setCompareTargets(prev=>{
     if(prev.includes(id))return prev.filter(x=>x!==id);
@@ -858,17 +883,31 @@ function RecruiterFlow({mobile}){
 
   const feedContent=(
     <div className="fade-up" style={{padding:mobile?16:0}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:14}}>
         <div>
           <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GHV,marginBottom:5}}>NWA Cohort · Active Pool</div>
           <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?24:30,color:CR}}>Vetted Talent Feed</h2>
         </div>
-        <div style={{fontSize:11,color:`${CR}55`}}>3 Scout-verified</div>
+        <button onClick={()=>setPrivacyShieldActive(p=>!p)}
+          style={{display:"flex",alignItems:"center",gap:6,padding:"7px 13px",borderRadius:8,cursor:"pointer",fontFamily:"DM Sans",fontSize:10,fontWeight:600,letterSpacing:".06em",textTransform:"uppercase",transition:"all .2s",flexShrink:0,
+            background:privacyShieldActive?`${G}15`:`rgba(106,175,221,.12)`,
+            border:privacyShieldActive?`1px solid ${G}44`:`1px solid rgba(106,175,221,.4)`,
+            color:privacyShieldActive?GHV:"#6AAFDD"}}>
+          <span style={{fontSize:12}}>{privacyShieldActive?"🔒":"🔓"}</span>
+          {privacyShieldActive?"Shield: On":"Shield: Off"}
+        </button>
       </div>
+      {!privacyShieldActive&&(
+        <div className="fade-in" style={{background:"rgba(106,175,221,.08)",border:"1px solid rgba(106,175,221,.28)",borderRadius:9,padding:"9px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:11}}>🔓</span>
+          <div style={{fontSize:11,color:"#8BC4E8",lineHeight:1.5}}>Privacy Shield off — all profiles fully visible. Toggle on to simulate a <span style={{color:"#6AAFDD",fontWeight:600}}>Stealth</span> candidate experience.</div>
+        </div>
+      )}
+      <div style={{fontSize:11,color:`${CR}55`,marginBottom:14}}>3 Scout-verified</div>
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
         {TALENTS.map(t=>(
-          <PrivacyShield key={t.id} name={t.name} company="Tyson Foods" redacted={t.redacted}>
+          <PrivacyShield key={t.id} name={t.name} company="Tyson Foods" redacted={privacyShieldActive&&t.redacted}>
             <div className="card card-glow" style={{padding:mobile?16:22,transition:"all .2s"}}>
               {/* top row */}
               <div style={{display:"flex",gap:12,marginBottom:12}}>
@@ -943,17 +982,34 @@ function RecruiterFlow({mobile}){
                   <RadarChart scores={t.radar} size={mobile?110:130}/>
                   <div style={{flex:1}}>
                     <div style={{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:GHV,marginBottom:10}}>Character Fingerprint</div>
-                    {Object.entries(t.radar).map(([k,v])=>(
-                      <div key={k} style={{marginBottom:7}}>
-                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                          <span style={{fontSize:10,color:`${CR}77`,textTransform:"capitalize"}}>{k==="eq"?"Emotional Intelligence":k}</span>
-                          <span className="mono" style={{fontSize:10,color:G}}>{v}</span>
+                    {Object.entries(t.radar).map(([k,v])=>{
+                      const traitQuotes={
+                        coachability:{1:"She absorbs feedback in real-time and acts on it before the meeting ends.",2:"Promoted twice in 18 months after adopting a new ops system in week one.",3:"She adapted to a full menu overhaul in 72 hours without a single complaint."},
+                        eq:{1:"She turns around culture in 90 days, retains staff others can't keep. — "+t.scout,2:"Achieved highest team NPS in the district — two years running. — "+t.scout,3:"Her team's trust scores are twice the regional average. — "+t.scout},
+                        motivation:{1:"He solved a $2M inventory problem in his third week. — "+t.scout,2:"He doesn't need managing — he needs a bigger stage. — "+t.scout,3:"She asked for more responsibility on day one. — "+t.scout},
+                        temperament:{1:"Led a 90-day facility transition with zero attrition. — "+t.scout,2:"Maintained composure through a full store remodel, 0% turnover. — "+t.scout,3:"The calmest person in any room, regardless of the pressure. — "+t.scout},
+                      };
+                      const quotePool=traitQuotes[k]||{};
+                      const quoteText=quotePool[t.id]||quotePool[1]||t.vouch.substring(0,80)+"… — "+t.scout;
+                      const labelMap={eq:"Emotional Intelligence"};
+                      return(
+                        <div key={k} style={{marginBottom:7,position:"relative"}}
+                          onMouseEnter={e=>{const tt=e.currentTarget.querySelector('.trait-tt');if(tt)tt.style.display='block';}}
+                          onMouseLeave={e=>{const tt=e.currentTarget.querySelector('.trait-tt');if(tt)tt.style.display='none';}}>
+                          <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                            <span style={{fontSize:10,color:`${CR}77`,textTransform:"capitalize",cursor:"help",textDecoration:"underline dotted",textUnderlineOffset:2}}>{labelMap[k]||k.charAt(0).toUpperCase()+k.slice(1)}</span>
+                            <span className="mono" style={{fontSize:10,color:G}}>{v}%</span>
+                          </div>
+                          <div style={{height:3,background:NL,borderRadius:2,overflow:"hidden"}}>
+                            <div style={{width:`${v}%`,height:"100%",background:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"width .8s ease"}}/>
+                          </div>
+                          <div className="trait-tt" style={{display:"none",position:"absolute",bottom:"calc(100% + 6px)",left:0,right:0,background:`rgba(18,32,64,.97)`,border:`1px solid ${G}44`,borderRadius:9,padding:"10px 12px",fontSize:11,color:CR,lineHeight:1.6,zIndex:20,whiteSpace:"normal",pointerEvents:"none"}}>
+                            <span style={{color:GHV,fontWeight:600,textTransform:"capitalize"}}>{labelMap[k]||k} {v}%</span><span style={{color:`${CR}44`}}> — </span>
+                            <span style={{fontFamily:"Cormorant Garamond",fontSize:13,fontStyle:"italic"}}>"{quoteText}"</span>
+                          </div>
                         </div>
-                        <div style={{height:3,background:NL,borderRadius:2,overflow:"hidden"}}>
-                          <div style={{width:`${v}%`,height:"100%",background:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"width .8s ease"}}/>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1145,7 +1201,40 @@ function ScoutFlow({mobile}){
         <div style={{textAlign:"center",padding:"48px 0"}}>
           <div style={{fontSize:48,marginBottom:16}}>🎫</div>
           <h2 style={{fontFamily:"Cormorant Garamond",fontSize:32,color:CR,marginBottom:8}}>Golden Ticket Issued.</h2>
-          <p style={{color:`${CR}66`,fontSize:13,marginBottom:24}}>Your nomination has been sent. Sarah will receive her personalized invitation within minutes.</p>
+          <p style={{color:`${CR}66`,fontSize:13,marginBottom:20}}>Your nomination has been sent. Sarah will receive her personalized invitation within minutes.</p>
+          {/* Future Impact Preview — Shadow Scout */}
+          <div className="fade-up card" style={{padding:18,marginBottom:20,background:`linear-gradient(135deg,${G}10,${G}05)`,border:`1px solid ${G}44`,textAlign:"left"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+              <div style={{width:32,height:32,background:`linear-gradient(135deg,${GD},${G})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>🔮</div>
+              <div>
+                <div style={{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:GHV}}>Future Impact Preview</div>
+                <div style={{fontSize:11,color:`${CR}55`}}>Based on your vouch strength</div>
+              </div>
+            </div>
+            <div style={{background:NL,borderRadius:9,padding:"12px 14px",marginBottom:12}}>
+              <div style={{fontSize:12,color:CR,lineHeight:1.7,marginBottom:8}}>
+                Based on your vouch, <span style={{color:GL,fontWeight:600}}>Sarah</span> is now projected to increase her income by <span style={{color:GHV,fontWeight:700}}>85%</span>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:10,justifyContent:"center",padding:"8px 0"}}>
+                <div style={{textAlign:"center"}}>
+                  <div className="mono" style={{fontSize:20,color:`${CR}55`,textDecoration:"line-through"}}>$38k</div>
+                  <div style={{fontSize:9,color:`${CR}44`}}>current</div>
+                </div>
+                <div style={{fontSize:20,color:G}}>→</div>
+                <div style={{textAlign:"center"}}>
+                  <div className="mono" style={{fontSize:24,color:GL,fontWeight:700}}>$70k</div>
+                  <div style={{fontSize:9,color:GHV}}>projected</div>
+                </div>
+              </div>
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",background:`${G}08`,border:`1px solid ${G}22`,borderRadius:8,padding:"10px 14px"}}>
+              <div style={{fontSize:12,color:CR}}>Your Legacy Score</div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div className="mono" style={{fontSize:22,color:GL}}>+12</div>
+                <div style={{fontSize:9,color:GHV,background:`${G}20`,padding:"2px 7px",borderRadius:4,letterSpacing:".06em"}}>IMPACT</div>
+              </div>
+            </div>
+          </div>
           <button className="btn-gold" onClick={()=>{setSent(false);setVouch("");setSelTraits([]);setVouchMode("type");}} style={{padding:"12px 30px",borderRadius:9}}>Nominate Another →</button>
         </div>
       ):(
@@ -1282,6 +1371,29 @@ function ScoutFlow({mobile}){
           ))}
         </div>
       </div>
+      {/* Scout Referral Reward */}
+      <div className="card" style={{padding:20,marginTop:14,border:`1px solid ${G}33`}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+          <div style={{width:28,height:28,background:`linear-gradient(135deg,${GD},${G})`,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>🤝</div>
+          <div>
+            <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:GHV}}>Scout Referral Program</div>
+            <div style={{fontSize:11,color:`${CR}66`}}>Grow the network. Earn Expert status.</div>
+          </div>
+        </div>
+        <p style={{fontSize:11,color:`${CR}66`,lineHeight:1.65,marginBottom:14}}>Refer another Scout to Next Lane. When they complete their first vouch, you earn an <span style={{color:GL,fontWeight:600}}>Expert Badge</span> and an extra Golden Ticket code.</p>
+        <div style={{background:NL,borderRadius:9,padding:"12px 14px",marginBottom:12,display:"flex",gap:12,alignItems:"center"}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,color:GHV,letterSpacing:".08em",marginBottom:3}}>Your Referral Link</div>
+            <div className="mono" style={{fontSize:11,color:G,wordBreak:"break-all"}}>nextlane.io/scout?ref=JW-Whitfield</div>
+          </div>
+          <button className="btn-ghost" style={{padding:"7px 12px",borderRadius:7,fontSize:10,flexShrink:0}}
+            onClick={()=>{navigator.clipboard&&navigator.clipboard.writeText("nextlane.io/scout?ref=JW-Whitfield")}}>Copy</button>
+        </div>
+        <div style={{display:"flex",gap:8,fontSize:10,color:`${CR}44`,alignItems:"center"}}>
+          <span style={{color:G}}>✦</span> Jim Cady — pending activation
+          <span style={{marginLeft:"auto",fontSize:9,color:`${G}88`,background:`${G}15`,padding:"2px 7px",borderRadius:3}}>1 referral</span>
+        </div>
+      </div>
     </div>
   );
 
@@ -1358,8 +1470,31 @@ function ScoutFlow({mobile}){
 }
 
 /* ══════════════════════════════════════════════
-   TALENT FLOW (condensed but complete)
+   AI CO-PILOT TOAST (Talent Anxiety Relief)
 ══════════════════════════════════════════════ */
+function AICopilotToast({screen,visible,onDismiss}){
+  const messages={
+    passion:"Maria, remember when you handled that double-shift last month? That's exactly the 'Passion' I saw in you. Write about that.",
+    growth:"Think about the one thing you've been fixing silently for years. That's your growth story. Own it.",
+    aspiration:"Don't be modest here — James vouched for you first. Describe where you see yourself as if you've already arrived."
+  };
+  if(!visible)return null;
+  return(
+    <div className="fade-up" style={{position:"fixed",bottom:80,left:"50%",transform:"translateX(-50%)",maxWidth:340,width:"90%",background:`linear-gradient(135deg,${NM},${NL})`,border:`1px solid ${G}55`,borderRadius:14,padding:"14px 16px",zIndex:300,boxShadow:`0 12px 40px rgba(0,0,0,.5),0 0 24px ${G}22`,display:"flex",gap:12,alignItems:"flex-start"}}>
+      <div style={{position:"relative",flexShrink:0}}>
+        <img src="https://i.pravatar.cc/32?img=12" style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${G}`}} alt="scout"/>
+        <div style={{position:"absolute",bottom:-2,right:-2,width:14,height:14,background:"#4CAF50",borderRadius:"50%",border:`2px solid ${NM}`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:7}}>●</div>
+      </div>
+      <div style={{flex:1}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+          <div style={{fontSize:10,color:GL,fontWeight:600}}>James · Scout's Insight</div>
+          <button onClick={onDismiss} style={{background:"none",border:"none",color:`${CR}44`,cursor:"pointer",fontSize:14,lineHeight:1,padding:"0 2px"}}>×</button>
+        </div>
+        <p style={{fontFamily:"Cormorant Garamond",fontSize:14,color:CR,lineHeight:1.6,fontStyle:"italic"}}>"{messages[screen]||messages.passion}"</p>
+      </div>
+    </div>
+  );
+}
 const TSTEPS=["landing","welcome","passion","growth","aspiration","character","dashboard"];
 const TLBLS=["Landing","Welcome","Passion","Growth","Aspiration","Character","Dashboard"];
 
@@ -1369,13 +1504,27 @@ function TalentFlow({mobile}){
   const [ans,setAns]=useState({passion:"",growth:"",aspiration:""});
   const [showQuote,setShowQuote]=useState(false);
   const [animKey,setAnimKey]=useState(0);
+  const [copilotVisible,setCopilotVisible]=useState(false);
+  const copilotTimerRef=useRef();
   const tiltRef=useRef();
   const tilt=useTilt(tiltRef);
+
+  const cur=TSTEPS[step];
+
+  // Start/reset the 10s AI co-pilot timer whenever we're on a writing screen
+  useEffect(()=>{
+    clearTimeout(copilotTimerRef.current);
+    setCopilotVisible(false);
+    const writingScreens=["passion","growth","aspiration"];
+    if(writingScreens.includes(cur)){
+      copilotTimerRef.current=setTimeout(()=>setCopilotVisible(true),10000);
+    }
+    return()=>clearTimeout(copilotTimerRef.current);
+  },[cur]);
 
   const go=n=>{setDir(n>step?"right":"left");setStep(n);setAnimKey(k=>k+1);if(TSTEPS[n]==="welcome"){setShowQuote(false);setTimeout(()=>setShowQuote(true),1600);}};
   const next=()=>go(Math.min(step+1,TSTEPS.length-1));
   const prev=()=>go(Math.max(step-1,0));
-  const cur=TSTEPS[step];
   const cls=dir==="right"?"slide-right":"slide-left";
 
   const traits=[{key:"Coachability",icon:"🧠",desc:"Adapts fast, listens deeply",active:true},{key:"Emotional Intelligence",icon:"💡",desc:"Reads rooms, builds loyalty",active:true},{key:"Motivation",icon:"🔥",desc:"Driven to outperform",active:false},{key:"Temperament",icon:"⚖️",desc:"Steady under pressure",active:false}];
@@ -1440,7 +1589,12 @@ function TalentFlow({mobile}){
       )}
     </div>
   );
-  return inner;
+  return(
+    <>
+      {inner}
+      <AICopilotToast screen={cur} visible={copilotVisible} onDismiss={()=>setCopilotVisible(false)}/>
+    </>
+  );
 }
 
 function TalentScreenContent({cur,animKey,cls,ans,setAns,showQuote,traits,next,prev,tiltRef,tilt,mobile,step}){
@@ -1449,8 +1603,10 @@ function TalentScreenContent({cur,animKey,cls,ans,setAns,showQuote,traits,next,p
 
   if(cur==="landing") return(
     <div key={animKey} className={cls} style={{maxWidth:mxw,width:"100%",textAlign:"center"}}>
-      <div style={{width:64,height:64,background:`${G}22`,borderRadius:"50%",margin:"0 auto 16px",border:`1px solid ${G}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <img src="https://i.pravatar.cc/50?img=12" style={{width:50,height:50,borderRadius:"50%"}} alt="scout"/>
+      <div style={{width:72,height:72,borderRadius:"50%",margin:"0 auto 16px",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+        <img src="https://i.pravatar.cc/50?img=12" className="verified-ring" style={{width:54,height:54,borderRadius:"50%"}} alt="scout"/>
+        <div style={{position:"absolute",top:-4,left:-4,right:-4,bottom:-4,borderRadius:"50%",border:`1px solid ${G}33`,animation:"verifiedRingPulse 2.4s ease infinite 0.4s"}}/>
+        <div style={{position:"absolute",bottom:2,right:2,width:18,height:18,background:`linear-gradient(135deg,${G},${GL})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,zIndex:2}}>✓</div>
       </div>
       <div style={{fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:GHV,marginBottom:10}}>James Whitfield · SVP Operations, Walmart</div>
       <h1 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?30:40,fontWeight:600,lineHeight:1.15,color:CR,marginBottom:14}}>Maria, James thinks<br/>you're ready for<br/><span className="gold-text">something bigger.</span></h1>
