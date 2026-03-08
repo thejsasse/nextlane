@@ -45,7 +45,9 @@ body{font-family:'DM Sans',sans-serif;background:#0B1628;color:white;overflow:hi
 @keyframes waveform{0%,100%{transform:scaleY(.2)}50%{transform:scaleY(1)}}
 @keyframes privacyBlur{0%{filter:blur(0px)}100%{filter:blur(6px)}}
 @keyframes radarDraw{0%{stroke-dashoffset:1000}100%{stroke-dashoffset:0}}
-@keyframes compareSlideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes highlightPulse{0%{background:rgba(201,168,76,.22)}60%{background:rgba(201,168,76,.08)}100%{background:rgba(201,168,76,.0)}}
+.vouch-highlight{animation:highlightPulse 2s ease forwards;border-radius:6px;padding:2px 0}
+@keyframes bulletReveal{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 @keyframes pulseRing{0%{box-shadow:0 0 0 0 rgba(201,168,76,.4)}70%{box-shadow:0 0 0 10px rgba(201,168,76,0)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}}
 @keyframes verifiedRingPulse{0%{box-shadow:0 0 0 0 rgba(201,168,76,.55),0 0 0 0 rgba(201,168,76,.2)}50%{box-shadow:0 0 0 5px rgba(201,168,76,.18),0 0 0 10px rgba(201,168,76,.07)}100%{box-shadow:0 0 0 0 rgba(201,168,76,0),0 0 0 0 rgba(201,168,76,0)}}
 .verified-ring{animation:verifiedRingPulse 2.4s ease infinite;border:2px solid #C9A84C !important}
@@ -138,6 +140,17 @@ function useTilt(ref){
 
 /* ══ TOP NAV ══ */
 function TopNav({view,setView,mobile,setMobile}){
+  const [logoClicks,setLogoClicks]=useState(0);
+  const logoTimerRef=useRef();
+
+  const handleLogoClick=()=>{
+    const next=logoClicks+1;
+    setLogoClicks(next);
+    clearTimeout(logoTimerRef.current);
+    if(next>=3){setLogoClicks(0);setView("admin");}
+    else{logoTimerRef.current=setTimeout(()=>setLogoClicks(0),800);}
+  };
+
   const tabs=[
     {id:"qr",label:"QR Unbox"},
     {id:"talent",label:"Talent Journey"},
@@ -148,11 +161,11 @@ function TopNav({view,setView,mobile,setMobile}){
   ];
   return(
     <div className="glass-nav" style={{padding:"0 16px",display:"flex",alignItems:"center",justifyContent:"space-between",height:56,position:"sticky",top:0,zIndex:200,flexShrink:0,gap:8}}>
-      <div style={{display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
-        <div style={{width:26,height:26,background:`linear-gradient(135deg,${GD},${G},${GL})`,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 10px ${G}44`}}>
+      <div onClick={handleLogoClick} style={{display:"flex",alignItems:"center",gap:8,flexShrink:0,cursor:"pointer",userSelect:"none"}}>
+        <div style={{width:26,height:26,background:`linear-gradient(135deg,${GD},${G},${GL})`,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 0 10px ${G}44`,transition:"transform .1s",transform:logoClicks>0?"scale(1.15)":"scale(1)"}}>
           <span style={{color:NAV,fontSize:13,fontWeight:700,fontFamily:"Cormorant Garamond"}}>N</span>
         </div>
-        <span style={{fontFamily:"Cormorant Garamond",fontSize:16,fontWeight:600,letterSpacing:".12em",color:CR,whiteSpace:"nowrap"}}>NEXT LANE</span>
+        <span style={{fontFamily:"Cormorant Garamond",fontSize:16,fontWeight:600,letterSpacing:".12em",color:view==="admin"?"#E85555":CR,whiteSpace:"nowrap"}}>NEXT LANE{view==="admin"&&<span style={{fontSize:10,color:"#E85555",marginLeft:6,letterSpacing:".08em"}}>ADMIN</span>}</span>
       </div>
       <div style={{display:"flex",gap:2,flexWrap:"wrap",justifyContent:"center"}}>
         {tabs.map(t=>(
@@ -559,26 +572,51 @@ function VoiceToPrompt({question,onDone}){
 }
 
 /* ══════════════════════════════════════════════
-   VOICE-TO-VOUCH UI
+   VOICE-TO-VOUCH UI (AI Refiner)
 ══════════════════════════════════════════════ */
+const RAW_TRANSCRIPT="uh Sarah yeah so she's got like this instinct for people that I just don't see that often, I've been doing this 20 years at Walmart and she just like, she handles situations that would break most people, like she doesn't just manage the room she like reads it you know? turns around culture in 90 days, keeps staff that others couldn't keep, and does it without losing her cool. She's exactly the kind of leader we need more of.";
+
+const POLISHED_BULLETS=[
+  {trait:"Leadership Presence","text":"Demonstrates rare instinctual people-reading ability honed over a 20-year professional context — defuses situations that break most managers."},
+  {trait:"Retention Record","text":"Consistently turns around team culture within 90 days and retains staff that other leaders cannot — a direct revenue-protecting behavior."},
+  {trait:"Emotional Stability","text":"Maintains composure under sustained high-pressure conditions without sacrificing standards or team morale."},
+  {trait:"Verdict","text":"Sarah is exactly the kind of leader this industry needs more of. She is ready for a stage commensurate with her impact."},
+];
+
 function VoiceToVouch({onTranscribed}){
-  const [state,setState]=useState("idle"); // idle → recording → processing → done
+  const [state,setState]=useState("idle"); // idle → recording → processing → polishing → done
   const [transcript,setTranscript]=useState("");
+  const [bullets,setBullets]=useState([]);
+  const [showRaw,setShowRaw]=useState(false);
   const timerRef=useRef();
 
   const startRecording=()=>{
     setState("recording");
-    timerRef.current=setTimeout(()=>{
-      setState("processing");
-      setTimeout(()=>{
-        setTranscript("Sarah has an instinct for people that I rarely see. In my 20 years at Walmart, I've watched her defuse situations that would have broken most managers. She doesn't just manage a room — she reads it. She turns around culture in 90 days, retains staff others can't keep, and does it all without losing her composure. She is exactly the kind of leader this industry needs more of.");
-        setState("done");
-      },1800);
-    },3000);
+    timerRef.current=setTimeout(()=>triggerProcess(),3000);
   };
 
-  const reset=()=>{setState("idle");setTranscript("");clearTimeout(timerRef.current);};
+  const triggerProcess=()=>{
+    clearTimeout(timerRef.current);
+    setState("processing");
+    setTimeout(()=>{
+      setState("polishing");
+      setBullets([]);
+      // Reveal bullets one at a time
+      POLISHED_BULLETS.forEach((_,i)=>{
+        setTimeout(()=>{
+          setBullets(prev=>[...prev,POLISHED_BULLETS[i]]);
+          if(i===POLISHED_BULLETS.length-1){
+            setTimeout(()=>{
+              setTranscript(POLISHED_BULLETS.map(b=>`• ${b.text}`).join("\n\n"));
+              setState("done");
+            },600);
+          }
+        },i*700);
+      });
+    },1600);
+  };
 
+  const reset=()=>{setState("idle");setTranscript("");setBullets([]);setShowRaw(false);clearTimeout(timerRef.current);};
   const bars=Array.from({length:24},(_,i)=>i);
 
   return(
@@ -596,38 +634,78 @@ function VoiceToVouch({onTranscribed}){
 
       {state==="recording"&&(
         <div className="fade-up" style={{textAlign:"center",padding:"20px 0"}}>
-          <div style={{fontSize:11,color:GHV,letterSpacing:".15em",textTransform:"uppercase",marginBottom:16}}>● Recording…</div>
-          {/* waveform */}
+          <div style={{fontSize:11,color:"#E85555",letterSpacing:".15em",textTransform:"uppercase",marginBottom:16}}>● Recording…</div>
           <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:3,height:48,marginBottom:20}}>
             {bars.map(i=>(
               <div key={i} className="wave-bar" style={{height:`${20+Math.random()*28}px`,animationDelay:`${i*.05}s`,animationDuration:`${0.6+Math.random()*.4}s`}}/>
             ))}
           </div>
           <p style={{fontSize:12,color:`${CR}55`,marginBottom:16}}>Speak naturally. Describe what sets this person apart.</p>
-          <button className="btn-ghost" onClick={()=>{clearTimeout(timerRef.current);setState("processing");setTimeout(()=>{setTranscript("Sarah has an instinct for people that I rarely see. In my 20 years at Walmart, I've watched her defuse situations that would have broken most managers. She doesn't just manage a room — she reads it. She turns around culture in 90 days, retains staff others can't keep, and does it all without losing her composure. She is exactly the kind of leader this industry needs more of.");setState("done");},1800);}} style={{padding:"10px 24px",borderRadius:8}}>Stop Recording</button>
+          <button className="btn-ghost" onClick={triggerProcess} style={{padding:"10px 24px",borderRadius:8}}>Stop Recording</button>
         </div>
       )}
 
       {state==="processing"&&(
         <div className="fade-up" style={{textAlign:"center",padding:"28px 0"}}>
-          <div style={{display:"flex",alignItems:"center",gap:4,justifyContent:"center",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,justifyContent:"center",marginBottom:10}}>
             <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/>
           </div>
-          <div style={{fontSize:12,color:`${CR}55`}}>Transcribing and formatting your vouch…</div>
+          <div style={{fontSize:12,color:`${CR}55`}}>Transcribing your voice…</div>
+        </div>
+      )}
+
+      {state==="polishing"&&(
+        <div className="fade-up" style={{padding:"8px 0"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14}}>
+            <div style={{width:22,height:22,background:`linear-gradient(135deg,${GD},${G})`,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,flexShrink:0}}>✦</div>
+            <div>
+              <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:GHV}}>AI Refiner · Polishing…</div>
+              <div style={{fontSize:10,color:`${CR}44`}}>Turning your words into executive-grade language</div>
+            </div>
+            <div style={{marginLeft:"auto",display:"flex",gap:3,alignItems:"center"}}>
+              <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/>
+            </div>
+          </div>
+          {/* raw transcript collapsed */}
+          <div style={{background:NL,borderRadius:7,padding:"7px 12px",marginBottom:12,cursor:"pointer"}}
+            onClick={()=>setShowRaw(r=>!r)}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={{fontSize:9,color:`${CR}44`,letterSpacing:".08em",textTransform:"uppercase"}}>Raw Transcript</span>
+              <span style={{fontSize:9,color:`${CR}33`}}>{showRaw?"▲":"▼"}</span>
+            </div>
+            {showRaw&&<p style={{fontSize:10,color:`${CR}44`,lineHeight:1.6,marginTop:6,fontStyle:"italic"}}>{RAW_TRANSCRIPT}</p>}
+          </div>
+          {/* bullets appear one by one */}
+          <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            {bullets.map((b,i)=>(
+              <div key={i} style={{background:`${G}08`,border:`1px solid ${G}22`,borderRadius:8,padding:"10px 12px",animation:"bulletReveal .4s ease forwards"}}>
+                <div style={{fontSize:9,color:GHV,letterSpacing:".08em",textTransform:"uppercase",marginBottom:3}}>{b.trait}</div>
+                <div style={{fontSize:11,color:CR,lineHeight:1.6}}>• {b.text}</div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {state==="done"&&(
         <div className="fade-up">
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:GHV}}>✓ Transcribed & Formatted</div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <div style={{width:18,height:18,background:`linear-gradient(135deg,${G},${GL})`,borderRadius:4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>✦</div>
+              <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:GHV}}>AI-Polished · Ready to Send</div>
+            </div>
             <button onClick={reset} className="btn-ghost" style={{padding:"4px 10px",borderRadius:6,fontSize:10}}>Re-record</button>
           </div>
-          <textarea value={transcript} onChange={e=>setTranscript(e.target.value)}
-            className="stationery"
-            style={{width:"100%",minHeight:120,resize:"none",borderRadius:10,padding:16,outline:"none"}}/>
-          <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:10,color:`${CR}44`}}>
-            <span>{transcript.length} characters · AI-formatted</span>
+          <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:10}}>
+            {POLISHED_BULLETS.map((b,i)=>(
+              <div key={i} style={{background:`${G}08`,border:`1px solid ${G}22`,borderRadius:8,padding:"10px 12px"}}>
+                <div style={{fontSize:9,color:GHV,letterSpacing:".08em",textTransform:"uppercase",marginBottom:2}}>{b.trait}</div>
+                <div style={{fontSize:11,color:CR,lineHeight:1.6}}>• {b.text}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",marginTop:4,fontSize:10,color:`${CR}44`}}>
+            <span>{transcript.length} chars · voice → AI refined</span>
             <span style={{color:G}}>✓ Ready to issue</span>
           </div>
           <button className="btn-gold" onClick={()=>onTranscribed&&onTranscribed(transcript)} style={{width:"100%",padding:"13px",borderRadius:10,marginTop:12,fontSize:12}}>Use This Vouch →</button>
@@ -842,6 +920,8 @@ function RecruiterFlow({mobile}){
   const [compareTargets,setCompareTargets]=useState([]); // up to 2 talent ids
   const [showCompare,setShowCompare]=useState(false);
   const [privacyShieldActive,setPrivacyShieldActive]=useState(true);
+  const [highlightTrait,setHighlightTrait]=useState({}); // {talentId: traitKey}
+  const vouchRefs=useRef({});
 
   const toggleCompare=id=>setCompareTargets(prev=>{
     if(prev.includes(id))return prev.filter(x=>x!==id);
@@ -936,7 +1016,13 @@ function RecruiterFlow({mobile}){
               </div>
 
               {/* scout vouch */}
-              <div style={{background:`${G}0A`,border:`1px solid ${G}22`,borderRadius:9,padding:"12px 14px",marginBottom:10}}>
+              <div ref={el=>vouchRefs.current[t.id]=el}
+                style={{background:`${G}0A`,border:`1px solid ${highlightTrait[t.id]?G+"88":G+"22"}`,borderRadius:9,padding:"12px 14px",marginBottom:10,transition:"border-color .3s",boxShadow:highlightTrait[t.id]?`0 0 16px ${G}33`:"none"}}>
+                {highlightTrait[t.id]&&(
+                  <div className="fade-in" style={{fontSize:9,color:GHV,letterSpacing:".1em",textTransform:"uppercase",marginBottom:6}}>
+                    ↓ Evidence for <span style={{color:GL}}>{highlightTrait[t.id]==="eq"?"Emotional Intelligence":highlightTrait[t.id].charAt(0).toUpperCase()+highlightTrait[t.id].slice(1)}</span>
+                  </div>
+                )}
                 <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:6}}>
                   <img src={`https://i.pravatar.cc/24?img=${t.scoutImg}`} style={{width:24,height:24,borderRadius:"50%",border:`1px solid ${G}44`}} alt={t.scout}/>
                   <div style={{flex:1}}>
@@ -992,18 +1078,30 @@ function RecruiterFlow({mobile}){
                       const quotePool=traitQuotes[k]||{};
                       const quoteText=quotePool[t.id]||quotePool[1]||t.vouch.substring(0,80)+"… — "+t.scout;
                       const labelMap={eq:"Emotional Intelligence"};
+                      const isHighlighted=highlightTrait[t.id]===k;
                       return(
                         <div key={k} style={{marginBottom:7,position:"relative"}}
                           onMouseEnter={e=>{const tt=e.currentTarget.querySelector('.trait-tt');if(tt)tt.style.display='block';}}
                           onMouseLeave={e=>{const tt=e.currentTarget.querySelector('.trait-tt');if(tt)tt.style.display='none';}}>
                           <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                            <span style={{fontSize:10,color:`${CR}77`,textTransform:"capitalize",cursor:"help",textDecoration:"underline dotted",textUnderlineOffset:2}}>{labelMap[k]||k.charAt(0).toUpperCase()+k.slice(1)}</span>
-                            <span className="mono" style={{fontSize:10,color:G}}>{v}%</span>
+                            <span
+                              onClick={()=>{
+                                setHighlightTrait(h=>({...h,[t.id]:k}));
+                                setTimeout(()=>setHighlightTrait(h=>({...h,[t.id]:null})),2200);
+                                if(vouchRefs.current[t.id]){
+                                  vouchRefs.current[t.id].scrollIntoView({behavior:"smooth",block:"nearest"});
+                                }
+                              }}
+                              style={{fontSize:10,color:isHighlighted?GL:`${CR}77`,textTransform:"capitalize",cursor:"pointer",textDecoration:"underline dotted",textUnderlineOffset:2,transition:"color .2s",fontWeight:isHighlighted?600:400}}>
+                              {labelMap[k]||k.charAt(0).toUpperCase()+k.slice(1)}
+                            </span>
+                            <span className="mono" style={{fontSize:10,color:isHighlighted?GL:G,transition:"color .2s"}}>{v}%</span>
                           </div>
                           <div style={{height:3,background:NL,borderRadius:2,overflow:"hidden"}}>
-                            <div style={{width:`${v}%`,height:"100%",background:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"width .8s ease"}}/>
+                            <div style={{width:`${v}%`,height:"100%",background:isHighlighted?`linear-gradient(90deg,${G},${GL},#fff)` :`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"background .3s, width .8s ease"}}/>
                           </div>
                           <div className="trait-tt" style={{display:"none",position:"absolute",bottom:"calc(100% + 6px)",left:0,right:0,background:`rgba(18,32,64,.97)`,border:`1px solid ${G}44`,borderRadius:9,padding:"10px 12px",fontSize:11,color:CR,lineHeight:1.6,zIndex:20,whiteSpace:"normal",pointerEvents:"none"}}>
+                            <div style={{fontSize:9,color:`${CR}44`,marginBottom:3}}>Click to highlight evidence in vouch ↓</div>
                             <span style={{color:GHV,fontWeight:600,textTransform:"capitalize"}}>{labelMap[k]||k} {v}%</span><span style={{color:`${CR}44`}}> — </span>
                             <span style={{fontFamily:"Cormorant Garamond",fontSize:13,fontStyle:"italic"}}>"{quoteText}"</span>
                           </div>
@@ -1036,6 +1134,32 @@ function RecruiterFlow({mobile}){
                     <span key={s} onClick={()=>setRatings(r=>({...r,[t.id]:s}))}
                       style={{fontSize:15,cursor:"pointer",transition:"color .1s",color:(ratings[t.id]||0)>=s?G:`${CR}22`}}>★</span>
                   ))}
+                </div>
+              </div>
+
+              {/* Ghost Competitor — Market Context */}
+              <div style={{marginTop:12,display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div style={{background:`${G}0A`,border:`1px solid ${G}33`,borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{fontSize:8,letterSpacing:".1em",textTransform:"uppercase",color:GHV,marginBottom:6}}>Next Lane</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                    {[{l:"Fee",v:"$1,000"},{l:"Time to hire",v:"12 days"},{l:"Offer accept rate",v:"78%"}].map(m=>(
+                      <div key={m.l} style={{display:"flex",justifyContent:"space-between"}}>
+                        <span style={{fontSize:9,color:`${CR}55`}}>{m.l}</span>
+                        <span className="mono" style={{fontSize:10,color:G,fontWeight:600}}>{m.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{background:`rgba(255,255,255,.02)`,border:`1px solid rgba(255,255,255,.07)`,borderRadius:8,padding:"10px 12px",opacity:.55}}>
+                  <div style={{fontSize:8,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}33`,marginBottom:6}}>Traditional Route</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:3}}>
+                    {[{l:"Fee",v:"$4,200"},{l:"Time to hire",v:"52 days"},{l:"Offer accept rate",v:"20%"}].map(m=>(
+                      <div key={m.l} style={{display:"flex",justifyContent:"space-between"}}>
+                        <span style={{fontSize:9,color:`${CR}33`}}>{m.l}</span>
+                        <span className="mono" style={{fontSize:10,color:`${CR}33`,textDecoration:"line-through"}}>{m.v}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1334,11 +1458,29 @@ function ScoutFlow({mobile}){
         <div style={{fontSize:11,color:`${CR}55`,marginBottom:14}}>Each slot is a potential life changed. Empty slots are missions awaiting discovery.</div>
         <div style={{display:"flex",gap:9,alignItems:"flex-end"}}>
           {slots.map((sl,i)=>(
-            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
-              <div className={`code-slot ${sl.s==="filled"?"filled":sl.s==="pending"?"":"empty"}`} style={{background:sl.s==="pending"?`${G}08`:undefined,borderColor:sl.s==="pending"?`${G}44`:undefined,width:38,height:52,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18}}>
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative"}}
+              onMouseEnter={e=>{if(sl.s!=="filled"){const tt=e.currentTarget.querySelector('.slot-tt');if(tt)tt.style.display='block';}}}
+              onMouseLeave={e=>{const tt=e.currentTarget.querySelector('.slot-tt');if(tt)tt.style.display='none';}}>
+              <div className={`code-slot ${sl.s==="filled"?"filled":sl.s==="pending"?"":"empty"}`}
+                style={{background:sl.s==="pending"?`${G}08`:sl.s==="empty"?`${NL}`:"",
+                  borderColor:sl.s==="pending"?`${G}44`:sl.s==="empty"?`${G}22`:"",
+                  width:38,height:52,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",
+                  fontSize:18,cursor:sl.s!=="filled"?"pointer":"default",
+                  transition:"border-color .2s",border:`1px dashed ${sl.s==="filled"?G:G+"33"}`}}>
                 {sl.s==="filled"?"🎫":sl.s==="pending"?"⏳":""}
               </div>
               <div className="mono" style={{fontSize:7,color:sl.s==="filled"?GHV:sl.s==="pending"?`${G}55`:`${CR}22`,letterSpacing:".1em"}}>{sl.s==="filled"?sl.l:sl.s==="pending"?"PEND":"OPEN"}</div>
+              {sl.s!=="filled"&&(
+                <div className="slot-tt" style={{display:"none",position:"absolute",bottom:"calc(100% + 8px)",left:"50%",transform:"translateX(-50%)",width:180,background:`rgba(18,32,64,.97)`,border:`1px solid ${G}44`,borderRadius:9,padding:"10px 12px",zIndex:30,pointerEvents:"none"}}>
+                  <div style={{fontSize:9,color:GHV,letterSpacing:".08em",textTransform:"uppercase",marginBottom:4}}>Opportunity Cost</div>
+                  <p style={{fontFamily:"Cormorant Garamond",fontSize:12,color:CR,lineHeight:1.55,margin:0,fontStyle:"italic"}}>
+                    {sl.s==="pending"
+                      ? "Waiting on Maria to unbox her ticket. Once she activates, this slot converts."
+                      : "This slot represents a $32k wage increase waiting to happen. Who are you meeting today that deserves it?"}
+                  </p>
+                  {sl.s==="empty"&&<div style={{marginTop:7,fontSize:9,color:`${CR}44`}}>Nominate someone →</div>}
+                </div>
+              )}
             </div>
           ))}
           <div style={{marginLeft:"auto",textAlign:"right"}}>
@@ -1575,11 +1717,11 @@ function TalentFlow({mobile}){
             <TalentScreenContent cur={cur} animKey={animKey} cls="" ans={ans} setAns={setAns} showQuote={showQuote} traits={traits} next={next} prev={prev} tiltRef={tiltRef} tilt={tilt} mobile={true} step={step}/>
           </div>
           {cur!=="landing"&&cur!=="dashboard"&&(
-            <div style={{padding:"10px 18px 18px",flexShrink:0,borderTop:`1px solid ${G}11`}}>
+            <div style={{padding:"10px 18px 20px",flexShrink:0,borderTop:`1px solid ${G}11`,background:NAV,position:"sticky",bottom:0,zIndex:10}}>
               <div style={{display:"flex",gap:10}}>
-                {step>0&&<button className="btn-ghost" onClick={prev} style={{padding:"13px 0",borderRadius:12,flex:1,fontSize:11}}>← Back</button>}
+                {step>0&&<button className="btn-ghost" onClick={prev} style={{padding:"15px 0",borderRadius:12,flex:1,fontSize:12}}>← Back</button>}
                 <button className="btn-gold" onClick={next} disabled={cur==="passion"&&ans.passion.length<20}
-                  style={{padding:"14px 0",borderRadius:12,flex:step>0?2:1,fontSize:11,boxShadow:`0 4px 18px ${G}44`}}>
+                  style={{padding:"16px 0",borderRadius:12,flex:step>0?2:1,fontSize:13,fontWeight:700,boxShadow:`0 4px 20px ${G}55`,letterSpacing:".04em"}}>
                   {cur==="character"?"Activate My Profile →":"Continue →"}
                 </button>
               </div>
@@ -1594,6 +1736,78 @@ function TalentFlow({mobile}){
       {inner}
       <AICopilotToast screen={cur} visible={copilotVisible} onDismiss={()=>setCopilotVisible(false)}/>
     </>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   WRITING SCREEN — Inline Inspiration
+══════════════════════════════════════════════ */
+function WritingScreen({cur,idx,val,title,hint,placeholders,scoutNote,question,mobile,animKey,cls,mxw,onChange,onVoiceDone,next,prev}){
+  const [phIdx,setPhIdx]=useState(0);
+  const [noteVisible,setNoteVisible]=useState(false);
+  const noteTimerRef=useRef();
+
+  // Cycle placeholders every 10s when textarea is empty
+  useEffect(()=>{
+    const t=setInterval(()=>setPhIdx(i=>(i+1)%placeholders.length),10000);
+    return()=>clearInterval(t);
+  },[placeholders.length]);
+
+  // Show Scout's Note after 6s on the screen (separate from the copilot toast)
+  useEffect(()=>{
+    setNoteVisible(false);
+    noteTimerRef.current=setTimeout(()=>setNoteVisible(true),6000);
+    return()=>clearTimeout(noteTimerRef.current);
+  },[cur]);
+
+  // Hide note once user starts typing
+  useEffect(()=>{if(val.length>10)setNoteVisible(false);},[val]);
+
+  const canContinue=cur==="passion"?val.length>=20:true;
+
+  return(
+    <div key={animKey} className={cls} style={{maxWidth:mxw,width:"100%"}}>
+      <div style={{fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:GHV,marginBottom:7}}>Step {idx} of 5</div>
+      <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?24:34,color:CR,marginBottom:5}}>{title}</h2>
+      <p style={{color:`${CR}77`,fontSize:12,marginBottom:14}}>{hint}</p>
+      <VoiceToPrompt question={question} onDone={onVoiceDone}/>
+      <div style={{fontSize:9,color:`${CR}44`,marginBottom:10,textAlign:"center",letterSpacing:".06em",textTransform:"uppercase"}}>— or type below —</div>
+
+      {/* Textarea + Scout's Note overlay */}
+      <div style={{position:"relative"}}>
+        <textarea value={val} onChange={e=>onChange(e.target.value)}
+          className="stationery" placeholder={placeholders[phIdx]}
+          style={{width:"100%",minHeight:mobile?110:128,resize:"none",borderRadius:10,padding:mobile?14:18,outline:"none",transition:"border-color .3s"}}/>
+
+        {/* Scout's Note — inline corner card */}
+        {noteVisible&&val.length===0&&(
+          <div className="fade-up" style={{position:"absolute",top:8,right:8,maxWidth:mobile?160:200,background:`linear-gradient(135deg,${NM}ee,${NL}ee)`,backdropFilter:"blur(8px)",border:`1px solid ${G}55`,borderRadius:9,padding:"9px 11px",zIndex:10,pointerEvents:"none"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:5}}>
+              <img src="https://i.pravatar.cc/18?img=12" style={{width:18,height:18,borderRadius:"50%",border:`1px solid ${G}`}} alt="scout"/>
+              <span style={{fontSize:9,color:GL,fontWeight:600}}>James' Note</span>
+              <span style={{marginLeft:"auto",fontSize:8,color:GHV,background:`${G}15`,padding:"1px 5px",borderRadius:3}}>{scoutNote.badge}</span>
+            </div>
+            <p style={{fontFamily:"Cormorant Garamond",fontSize:mobile?11:12,color:CR,lineHeight:1.55,fontStyle:"italic",margin:0}}>
+              "{scoutNote.text}"
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"5px 0 18px"}}>
+        <span style={{fontSize:9,color:`${CR}44`}}>{val.length} characters{cur==="passion"&&val.length<20&&val.length>0?` · ${20-val.length} more to unlock`:""}</span>
+        {val.length>=20&&<span style={{fontSize:9,color:GHV}}>✓ Ready</span>}
+      </div>
+
+      {!mobile&&(
+        <div style={{display:"flex",gap:10}}>
+          <button className="btn-ghost" onClick={prev} style={{padding:"12px 20px",borderRadius:9,flex:1}}>← Back</button>
+          <button className="btn-gold" onClick={next} disabled={!canContinue} style={{padding:"12px 20px",borderRadius:9,flex:2}}>
+            {cur==="aspiration"?"Almost there →":"Continue →"}
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1645,23 +1859,51 @@ function TalentScreenContent({cur,animKey,cls,ans,setAns,showQuote,traits,next,p
   if(cur==="passion"||cur==="growth"||cur==="aspiration"){
     const idx=cur==="passion"?2:cur==="growth"?3:4;
     const val=cur==="passion"?ans.passion:cur==="growth"?ans.growth:ans.aspiration;
-    const ph=cur==="passion"?"I love building teams from scratch...":cur==="growth"?"I want a seat at the table where strategy gets made...":"Leading a regional operations team...";
     const title=cur==="passion"?"What do you love doing?":cur==="growth"?"What would you change?":"Where do you want to be in 3 years?";
     const hint=cur==="passion"?"Think about moments when time disappears.":cur==="growth"?"About your current role — no filter needed.":"Don't be modest. James believed in you first.";
     const QUESTIONS={"passion":"What do you love doing?","growth":"What would you change?","aspiration":"Where do you want to be in 3 years?"};
+
+    // Placeholder pools per screen
+    const PLACEHOLDERS={
+      passion:[
+        "Tell us about a time you solved a conflict no one else would touch…",
+        "What part of your day feels most rewarding?",
+        "Describe a moment when you just knew you were built for more.",
+        "What would your best regular customer say about you?",
+      ],
+      growth:[
+        "What's the one thing you've been quietly fixing for years?",
+        "If you could redesign one broken process, what would it be?",
+        "What change have you wanted to make but didn't have the authority to?",
+        "What do you know now that you wish leadership understood?",
+      ],
+      aspiration:[
+        "Leading a regional operations team at a company that measures culture…",
+        "Describe where you see yourself as if you've already arrived.",
+        "What does your ideal Monday morning look like in 3 years?",
+        "What title would finally match what you've already been doing?",
+      ],
+    };
+
+    // Scout's Note per screen
+    const SCOUT_NOTES={
+      passion:{text:"James noted your 'quiet authority' during peak holiday hours. Tell me about a time you kept your cool when everything was on fire.",badge:"Coachability"},
+      growth:{text:"You've been the person who makes the plan work for 6 years. James thinks you're ready to be the one who makes the plan. What's holding the current one back?",badge:"Motivation"},
+      aspiration:{text:"James said 'the room changes when she walks in.' Where do you want to be walking into in 3 years?",badge:"Temperament"},
+    };
+
     return(
-      <div key={animKey} className={cls} style={{maxWidth:mxw,width:"100%"}}>
-        <div style={{fontSize:10,letterSpacing:".16em",textTransform:"uppercase",color:GHV,marginBottom:7}}>Step {idx} of 5</div>
-        <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?24:34,color:CR,marginBottom:5}}>{title}</h2>
-        <p style={{color:`${CR}77`,fontSize:12,marginBottom:14}}>{hint}</p>
-        <VoiceToPrompt question={QUESTIONS[cur]} onDone={v=>setAns(a=>({...a,[cur]:v}))}/>
-        <div style={{fontSize:9,color:`${CR}44`,marginBottom:10,textAlign:"center",letterSpacing:".06em",textTransform:"uppercase"}}>— or type below —</div>
-        <textarea value={val} onChange={e=>{const v=e.target.value;setAns(a=>({...a,[cur]:v}));}}
-          className="stationery" placeholder={ph}
-          style={{width:"100%",minHeight:mobile?100:118,resize:"none",borderRadius:10,padding:mobile?14:18,outline:"none"}}/>
-        <div style={{textAlign:"right",fontSize:10,color:`${CR}44`,margin:"4px 0 18px"}}>{val.length} characters</div>
-        {!mobile&&<div style={{display:"flex",gap:10}}><button className="btn-ghost" onClick={prev} style={{padding:"12px 20px",borderRadius:9,flex:1}}>← Back</button><button className="btn-gold" onClick={next} disabled={cur==="passion"&&val.length<20} style={{padding:"12px 20px",borderRadius:9,flex:2}}>{cur==="aspiration"?"Almost there →":"Continue →"}</button></div>}
-      </div>
+      <WritingScreen
+        key={cur}
+        cur={cur} idx={idx} val={val} title={title} hint={hint}
+        placeholders={PLACEHOLDERS[cur]||PLACEHOLDERS.passion}
+        scoutNote={SCOUT_NOTES[cur]}
+        question={QUESTIONS[cur]}
+        mobile={mobile} animKey={animKey} cls={cls} mxw={mxw}
+        onChange={v=>setAns(a=>({...a,[cur]:v}))}
+        onVoiceDone={v=>setAns(a=>({...a,[cur]:v}))}
+        next={next} prev={prev}
+      />
     );
   }
 
@@ -2072,6 +2314,7 @@ function App(){
       {view==="recruiter" && <RecruiterFlow mobile={mobile}/>}
       {view==="card"      && <PhysicalCard  mobile={mobile}/>}
       {view==="analytics" && <AnalyticsView mobile={mobile}/>}
+      {view==="admin"     && <AdminDashboard mobile={mobile}/>}
     </>
   );
 
@@ -2084,6 +2327,244 @@ function App(){
         <div style={{flex:1,overflow:"hidden"}}>{content}</div>
       )}
       {error&&<ErrorToast msg={error} onClose={()=>setError(null)}/>}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ADMIN DASHBOARD (hidden — triple-click logo)
+══════════════════════════════════════════════ */
+function AdminDashboard({mobile}){
+  const [tab,setTab]=useState("overview");
+
+  // Mock pilot data
+  const COHORT_DATA={
+    scouts:{total:12,active:9,ticketsIssued:48,avgVouchTime:"4m 12s"},
+    talent:{ticketsReceived:48,activated:34,completionRate:71},
+    recruiter:{feedViews:89,meetingRequests:14,offers:7,accepts:6},
+  };
+
+  const CONVERSION_FUNNEL=[
+    {stage:"Scouts Onboarded",n:12,color:G},
+    {stage:"Tickets Issued",n:48,color:GL},
+    {stage:"Talent Activated",n:34,color:"#8BC4E8"},
+    {stage:"Recruiter Match",n:22,color:"#6AAFDD"},
+    {stage:"Meeting Scheduled",n:14,color:"#5BA0CC"},
+    {stage:"Offer Extended",n:7,color:"#8BC84E"},
+    {stage:"Offer Accepted",n:6,color:"#4CAF50"},
+  ];
+
+  const SCOUT_ENGAGEMENT=[
+    {name:"James Whitfield",vouches:7,avgTime:"3m 58s",mode:"voice",retention:"91%"},
+    {name:"Aric Marshall",vouches:14,avgTime:"6m 12s",mode:"type",retention:"86%"},
+    {name:"Cade Collister",vouches:11,avgTime:"4m 44s",mode:"voice",retention:"82%"},
+    {name:"Sandra Lee",vouches:5,avgTime:"5m 02s",mode:"type",retention:"79%"},
+    {name:"Marcus Webb",vouches:3,avgTime:"8m 30s",mode:"type",retention:"67%"},
+  ];
+
+  const DEMAND=[
+    {name:"Maria Gutierrez",views:12,requests:3,score:97},
+    {name:"Lucia Fernández",views:8,requests:2,score:91},
+    {name:"DeShawn Okafor",views:6,requests:1,score:94},
+  ];
+
+  const WEEKLY=[
+    {w:"W1",tickets:6,activations:4,meetings:1},
+    {w:"W2",tickets:11,activations:8,meetings:3},
+    {w:"W3",tickets:14,activations:10,meetings:5},
+    {w:"W4",tickets:17,activations:12,meetings:5},
+  ];
+
+  const maxW=Math.max(...WEEKLY.map(w=>w.tickets));
+  const barH=60;
+
+  return(
+    <div style={{height:mobile?"100%":"calc(100vh - 56px)",display:"flex",flexDirection:"column",background:NAV,backgroundImage:GRAIN,overflow:"hidden"}}>
+      {/* Admin header */}
+      <div style={{padding:"16px 24px 0",borderBottom:`1px solid #E8555522`,flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:"#E85555",boxShadow:"0 0 8px #E8555588",animation:"typingPulse 2s ease infinite"}}/>
+          <div style={{fontSize:9,letterSpacing:".18em",textTransform:"uppercase",color:"#E85555"}}>Pilot Admin · NWA Cohort 2025</div>
+          <div style={{marginLeft:"auto",fontSize:9,color:`${CR}33`}}>Triple-click logo to exit</div>
+        </div>
+        <div style={{display:"flex",gap:0,overflowX:"auto"}}>
+          {[{id:"overview",l:"Overview"},{id:"funnel",l:"Conversion Funnel"},{id:"engagement",l:"Scout Engagement"},{id:"demand",l:"Market Demand"}].map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id)}
+              style={{padding:mobile?"8px 12px":"9px 18px",border:"none",cursor:"pointer",fontFamily:"DM Sans",fontSize:10,fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",
+                background:tab===t.id?"#E8555518":"transparent",
+                color:tab===t.id?"#E85555":`${CR}44`,
+                borderBottom:tab===t.id?"2px solid #E85555":"2px solid transparent",
+                transition:"all .2s",whiteSpace:"nowrap"}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="scroll-y" style={{flex:1,padding:mobile?16:28}}>
+
+        {tab==="overview"&&(
+          <div className="fade-up">
+            <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?22:28,color:CR,marginBottom:6}}>Pilot Success Report</div>
+            <div style={{fontSize:11,color:`${CR}44`,marginBottom:22}}>Month 1 · Foundation Gate · NWA Region</div>
+
+            {/* KPI grid */}
+            <div style={{display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:24}}>
+              {[
+                {l:"Ticket → Activation",v:"71%",sub:"34 of 48 activated",c:"#4CAF50"},
+                {l:"Meeting Conversion",v:"64%",sub:"14 of 22 matches",c:G},
+                {l:"Offer Accept Rate",v:"86%",sub:"6 of 7 extended",c:GL},
+                {l:"Avg Vouch Time",v:"4m 12s",sub:"Scout engagement",c:"#6AAFDD"},
+              ].map(k=>(
+                <div key={k.l} className="card" style={{padding:16,borderTop:`2px solid ${k.c}33`}}>
+                  <div className="mono" style={{fontSize:mobile?22:26,color:k.c,lineHeight:1,marginBottom:4}}>{k.v}</div>
+                  <div style={{fontSize:10,color:CR,fontWeight:500,marginBottom:2}}>{k.l}</div>
+                  <div style={{fontSize:9,color:`${CR}44`}}>{k.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Weekly bar chart */}
+            <div className="card" style={{padding:20,marginBottom:16}}>
+              <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:GHV,marginBottom:16}}>Weekly Activity</div>
+              <div style={{display:"flex",gap:mobile?10:20,alignItems:"flex-end",height:barH+30}}>
+                {WEEKLY.map(w=>(
+                  <div key={w.w} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+                    <div style={{display:"flex",gap:2,alignItems:"flex-end",height:barH}}>
+                      {[{v:w.tickets,c:G},{v:w.activations,c:"#6AAFDD"},{v:w.meetings,c:"#4CAF50"}].map((b,i)=>(
+                        <div key={i} style={{width:mobile?8:12,background:b.c,borderRadius:"2px 2px 0 0",height:`${(b.v/maxW)*barH}px`,opacity:.85,minHeight:3}}/>
+                      ))}
+                    </div>
+                    <div style={{fontSize:9,color:`${CR}44`}}>{w.w}</div>
+                  </div>
+                ))}
+                <div style={{display:"flex",flexDirection:"column",gap:5,justifyContent:"flex-end",paddingBottom:20}}>
+                  {[{c:G,l:"Tickets"},{c:"#6AAFDD",l:"Activations"},{c:"#4CAF50",l:"Meetings"}].map(lg=>(
+                    <div key={lg.l} style={{display:"flex",alignItems:"center",gap:5}}>
+                      <div style={{width:8,height:8,borderRadius:1,background:lg.c}}/>
+                      <span style={{fontSize:9,color:`${CR}44`}}>{lg.l}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Pipeline snapshot */}
+            <div className="card" style={{padding:20}}>
+              <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:GHV,marginBottom:14}}>Pipeline Snapshot</div>
+              <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"repeat(3,1fr)",gap:10}}>
+                {[
+                  {g:"Scout",items:[`${COHORT_DATA.scouts.total} scouts onboarded`,`${COHORT_DATA.scouts.ticketsIssued} tickets issued`,`Avg vouch: ${COHORT_DATA.scouts.avgVouchTime}`],c:G},
+                  {g:"Talent",items:[`${COHORT_DATA.talent.ticketsReceived} tickets received`,`${COHORT_DATA.talent.activated} profiles activated`,`${COHORT_DATA.talent.completionRate}% completion rate`],c:"#6AAFDD"},
+                  {g:"Recruiter",items:[`${COHORT_DATA.recruiter.feedViews} feed views`,`${COHORT_DATA.recruiter.meetingRequests} meeting requests`,`${COHORT_DATA.recruiter.accepts} hires confirmed`],c:"#4CAF50"},
+                ].map(g=>(
+                  <div key={g.g} style={{background:`${g.c}08`,border:`1px solid ${g.c}22`,borderRadius:9,padding:14}}>
+                    <div style={{fontSize:10,color:g.c,fontWeight:600,marginBottom:10}}>{g.g}</div>
+                    {g.items.map((item,i)=>(
+                      <div key={i} style={{fontSize:11,color:`${CR}66`,marginBottom:5,display:"flex",alignItems:"center",gap:6}}>
+                        <span style={{color:g.c,fontSize:9}}>●</span>{item}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab==="funnel"&&(
+          <div className="fade-up">
+            <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?22:26,color:CR,marginBottom:20}}>Conversion Funnel</div>
+            {CONVERSION_FUNNEL.map((s,i)=>{
+              const pct=Math.round((s.n/CONVERSION_FUNNEL[0].n)*100);
+              const conv=i>0?Math.round((s.n/CONVERSION_FUNNEL[i-1].n)*100):100;
+              return(
+                <div key={s.stage} style={{marginBottom:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                    <span style={{fontSize:11,color:CR_AA}}>{s.stage}</span>
+                    <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                      <span className="mono" style={{fontSize:13,color:s.color,fontWeight:600}}>{s.n}</span>
+                      {i>0&&<span style={{fontSize:9,color:CR_SUB,background:`${NL}`,padding:"1px 6px",borderRadius:3}}>{conv}% conv.</span>}
+                    </div>
+                  </div>
+                  <div style={{height:8,background:NL,borderRadius:4,overflow:"hidden"}}>
+                    <div style={{width:`${pct}%`,height:"100%",background:`linear-gradient(90deg,${s.color}88,${s.color})`,borderRadius:4,transition:"width .8s ease"}}/>
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{marginTop:20,padding:16,background:`${G}0A`,border:`1px solid ${G}22`,borderRadius:10}}>
+              <div style={{fontSize:10,color:GHV,letterSpacing:".1em",textTransform:"uppercase",marginBottom:8}}>Key Insight</div>
+              <div style={{fontSize:12,color:CR_AA,lineHeight:1.7}}>The biggest drop-off is <span style={{color:GL}}>Scout → Ticket Issued</span> (12 → 48 is strong) vs <span style={{color:GL}}>Ticket → Activation</span> at 71%. Focus: reduce onboarding friction for Talent in the first 24h post-ticket.</div>
+            </div>
+          </div>
+        )}
+
+        {tab==="engagement"&&(
+          <div className="fade-up">
+            <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?22:26,color:CR,marginBottom:6}}>Scout Engagement</div>
+            <div style={{fontSize:11,color:`${CR}44`,marginBottom:20}}>Average time spent on vouch · voice vs. type split · 90-day retention per scout</div>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {SCOUT_ENGAGEMENT.map((s,i)=>(
+                <div key={s.name} className="card card-glow" style={{padding:"14px 18px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <img src={`https://i.pravatar.cc/32?img=${i+11}`} style={{width:34,height:34,borderRadius:"50%",border:`1px solid ${G}44`}} alt={s.name}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12,fontWeight:600,color:CR}}>{s.name}</div>
+                      <div style={{display:"flex",gap:8,marginTop:3,flexWrap:"wrap"}}>
+                        <span style={{fontSize:9,color:`${CR}55`}}>⏱ {s.avgTime} avg vouch</span>
+                        <span style={{fontSize:9,color:s.mode==="voice"?G:`${CR}55`,background:s.mode==="voice"?`${G}15`:"transparent",padding:"1px 5px",borderRadius:3,border:s.mode==="voice"?`1px solid ${G}33`:"none"}}>
+                          {s.mode==="voice"?"🎙 Voice":"✍ Type"}
+                        </span>
+                        <span style={{fontSize:9,color:"#4CAF50"}}>{s.retention} retention</span>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right",flexShrink:0}}>
+                      <div className="mono" style={{fontSize:20,color:G}}>{s.vouches}</div>
+                      <div style={{fontSize:9,color:`${CR}44`}}>vouches</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {tab==="demand"&&(
+          <div className="fade-up">
+            <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?22:26,color:CR,marginBottom:6}}>Market Demand</div>
+            <div style={{fontSize:11,color:`${CR}44`,marginBottom:20}}>Recruiter views and meeting requests per talent profile</div>
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:24}}>
+              {DEMAND.map((d,i)=>(
+                <div key={d.name} className="card" style={{padding:"16px 18px"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                    <img src={`https://i.pravatar.cc/36?img=${21+i}`} style={{width:36,height:36,borderRadius:"50%",border:`2px solid ${G}44`}} alt={d.name}/>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:CR}}>{d.name}</div>
+                      <div className="mono" style={{fontSize:10,color:G}}>Match Score: {d.score}</div>
+                    </div>
+                  </div>
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10}}>
+                    {[{l:"Feed Views",v:d.views,c:"#6AAFDD"},{l:"Meeting Req.",v:d.requests,c:G},{l:"Demand Index",v:`${Math.round((d.requests/d.views)*100)}%`,c:"#4CAF50"}].map(m=>(
+                      <div key={m.l} style={{background:NL,borderRadius:7,padding:"9px 10px",textAlign:"center"}}>
+                        <div className="mono" style={{fontSize:18,color:m.c,lineHeight:1,marginBottom:2}}>{m.v}</div>
+                        <div style={{fontSize:9,color:CR_AA}}>{m.l}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="card" style={{padding:18,background:`${G}08`,border:`1px solid ${G}33`}}>
+              <div style={{fontSize:9,color:GHV,letterSpacing:".12em",textTransform:"uppercase",marginBottom:8}}>Investor Narrative</div>
+              <div style={{fontSize:12,color:CR_AA,lineHeight:1.75}}>
+                In Month 1, NextLane generated <span style={{color:GL}}>14 meeting requests</span> across 3 talent profiles from 89 recruiter feed views — a <span style={{color:GL}}>15.7% demand conversion rate</span>. Traditional job boards average 0.8%. With a $1,000 placement fee and 86% offer-accept rate, the pipeline projects <span style={{color:GL}}>$6,000 in Month 1 GMV</span> from a 12-scout cohort.
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
