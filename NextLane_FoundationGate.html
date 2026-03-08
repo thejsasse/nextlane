@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Next Lane — Foundation Gate Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%;width:100%}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:#0B1628;
+  color:white;
+  overflow:hidden;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:#0B1628}
+::-webkit-scrollbar-thumb{background:#C9A84C;border-radius:2px}
+
+/* ── Keyframes ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(44px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(-44px)}to{opacity:1;transform:translateX(0)}}
+@keyframes foilShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+@keyframes igniteBtn{0%{filter:grayscale(1) opacity(.35)}55%{filter:grayscale(0) opacity(1) brightness(1.4)}100%{filter:grayscale(0) opacity(1) brightness(1)}}
+@keyframes borderBleed{0%{box-shadow:0 0 0 0 rgba(201,168,76,0)}50%{box-shadow:0 0 0 6px rgba(201,168,76,.35),0 0 32px 4px rgba(201,168,76,.18)}100%{box-shadow:0 0 0 2px rgba(201,168,76,.18)}}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes typingPulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1.1)}}
+@keyframes lightSweep{0%{left:-60%}100%{left:160%}}
+@keyframes goldPulse{0%,100%{opacity:.18}50%{opacity:.45}}
+@keyframes skeletonMove{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes laneDrawDesktop{0%{stroke-dashoffset:600}100%{stroke-dashoffset:0}}
+@keyframes laneDrawMobile{0%{stroke-dashoffset:400}100%{stroke-dashoffset:0}}
+@keyframes errorShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+@keyframes missionGlow{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0)}50%{box-shadow:0 0 24px 2px rgba(201,168,76,.12)}}
+
+.fade-up{animation:fadeUp .42s ease forwards}
+.slide-right{animation:slideRight .36s cubic-bezier(.25,.8,.25,1) forwards}
+.slide-left{animation:slideLeft .36s cubic-bezier(.25,.8,.25,1) forwards}
+
+.gold-text{
+  background:linear-gradient(90deg,#8B6914 0%,#C9A84C 25%,#F0D980 50%,#C9A84C 75%,#8B6914 100%);
+  background-size:300% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:foilShimmer 4s linear infinite;
+}
+.btn-gold{
+  background:linear-gradient(135deg,#8B6914 0%,#C9A84C 30%,#F0D980 55%,#C9A84C 80%,#8B6914 100%);
+  background-size:250% auto;color:#0B1628;border:none;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;font-size:12px;position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s,background-position .4s;
+}
+.btn-gold::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);
+  transform:skewX(-20deg)}
+.btn-gold:hover:not(:disabled)::after{animation:lightSweep .55s ease}
+.btn-gold:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 28px rgba(201,168,76,.4);background-position:right center}
+.btn-gold:disabled{filter:grayscale(1);opacity:.35;cursor:not-allowed}
+.btn-gold.ignited{animation:igniteBtn .65s ease forwards}
+.btn-ghost{background:transparent;color:#C9A84C;border:1px solid rgba(201,168,76,.3);cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  font-size:11px;transition:border-color .2s,background .2s,transform .2s}
+.btn-ghost:hover{border-color:#C9A84C;background:rgba(201,168,76,.07);transform:translateY(-1px)}
+.card{background:#122040;border:1px solid rgba(201,168,76,.12);border-radius:12px}
+.card-glow{transition:border-color .25s,box-shadow .25s}
+.card-glow:hover{border-color:rgba(201,168,76,.36);box-shadow:0 0 32px rgba(201,168,76,.08)}
+.glass-nav{background:rgba(11,22,40,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid rgba(201,168,76,.18)}
+.stationery{background:rgba(245,240,232,.055)!important;border:1px solid rgba(245,240,232,.14)!important;
+  color:#F5F0E8!important;font-family:'Cormorant Garamond',serif!important;font-size:16px!important;
+  line-height:1.85!important;letter-spacing:.01em;transition:box-shadow .3s!important}
+.stationery::placeholder{color:rgba(245,240,232,.22)!important;font-style:italic}
+.stationery.ignite-border{animation:borderBleed .7s ease forwards}
+.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+input{background:#1A2E55;border:1px solid rgba(201,168,76,.13);border-radius:8px;
+  padding:12px 14px;color:#F5F0E8;font-size:14px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border-color .2s}
+input:focus{border-color:rgba(201,168,76,.5)}
+input::placeholder{color:rgba(245,240,232,.28)}
+.scroll-y{overflow-y:auto}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:#C9A84C;
+  display:inline-block;margin:0 2px;animation:typingPulse 1.2s ease infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+.code-slot{width:44px;height:60px;border-radius:8px;border:1px solid rgba(201,168,76,.35);
+  display:flex;align-items:center;justify-content:center;font-size:22px;transition:all .3s}
+.code-slot.filled{background:linear-gradient(145deg,rgba(201,168,76,.18),rgba(201,168,76,.08));
+  box-shadow:0 0 12px rgba(201,168,76,.2)}
+.code-slot.empty{background:rgba(255,255,255,.02);border-style:dashed;border-color:rgba(201,168,76,.18)}
+.tooltip-wrap{position:relative;display:inline-block}
+.tooltip-box{display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:rgba(18,32,64,.97);backdrop-filter:blur(8px);border:1px solid rgba(201,168,76,.35);
+  border-radius:10px;padding:12px 16px;width:240px;font-size:12px;color:#F5F0E8;line-height:1.6;
+  z-index:300;pointer-events:none;white-space:normal}
+.tooltip-wrap:hover .tooltip-box{display:block}
+
+/* Skeleton shimmer */
+.skeleton{background:linear-gradient(90deg,#122040 25%,#1A2E55 50%,#122040 75%);
+  background-size:400% 100%;animation:skeletonMove 1.8s ease infinite;border-radius:8px}
+
+/* Mission awaiting */
+.mission-pulse{animation:missionGlow 3s ease infinite}
+
+/* View toggle */
+.view-toggle{display:flex;background:rgba(18,32,64,.8);border:1px solid rgba(201,168,76,.2);
+  border-radius:8px;overflow:hidden}
+.view-toggle button{padding:6px 14px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;transition:all .2s}
+</style>
+</head>
+<body><div id="root"></div>
+
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+const G="#C9A84C",GL="#E8C97A",GD="#8B6914",NAV="#0B1628",NM="#122040",NL="#1A2E55",CR="#F5F0E8";
+
+/* ── UTILS ── */
+function useTilt(ref){
+  const onMove=useCallback(e=>{
+    if(!ref.current)return;
+    const r=ref.current.getBoundingClientRect();
+    const x=((e.clientX-r.left)/r.width-.5)*14;
+    const y=((e.clientY-r.top)/r.height-.5)*-14;
+    ref.current.style.transform=`perspective(600px) rotateY(${x}deg) rotateX(${y}deg) scale(1.02)`;
+    ref.current.style.boxShadow=`${-x*1.5}px ${y*1.2}px 38px rgba(201,168,76,.24)`;
+  },[ref]);
+  const onLeave=useCallback(()=>{
+    if(!ref.current)return;
+    ref.current.style.transform="perspective(600px) rotateY(0) rotateX(0) scale(1)";
+    ref.current.style.boxShadow="none";
+  },[ref]);
+  return{onMouseMove:onMove,onMouseLeave:onLeave};
+}
+
+/* ── TOP NAV ── */
+function TopNav({view,setView,mobile,setMobile}){
+  const tabs=[{id:"talent",label:"Talent Journey"},{id:"scout",label:"Scout Center"},{id:"recruiter",label:"Recruiter Feed"}];
+  return(
+    <div className="glass-nav" style={{padding:"0 20px",display:"flex",alignItems:"center",
+      justifyContent:"space-between",height:58,position:"sticky",top:0,zIndex:200,flexShrink:0}}>
+      <div style={{display:"flex",alignItems:"center",gap:9}}>
+        <div style={{width:28,height:28,background:`linear-gradient(135deg,${GD},${G},${GL})`,
+          borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",
+          boxShadow:`0 0 10px ${G}44`}}>
+          <span style={{color:NAV,fontSize:14,fontWeight:700,fontFamily:"Cormorant Garamond"}}>N</span>
+        </div>
+        <span style={{fontFamily:"Cormorant Garamond",fontSize:18,fontWeight:600,letterSpacing:".12em",color:CR}}>NEXT LANE</span>
+      </div>
+      <div style={{display:"flex",gap:3}}>
+        {tabs.map(t=>(
+          <button key={t.id} onClick={()=>setView(t.id)}
+            style={{padding:"6px 14px",borderRadius:7,border:"none",cursor:"pointer",
+              fontFamily:"DM Sans",fontSize:11,fontWeight:500,letterSpacing:".06em",transition:"all .2s",
+              background:view===t.id?`linear-gradient(135deg,${GD},${G},${GL})`:"transparent",
+              color:view===t.id?NAV:`${CR}99`,
+              boxShadow:view===t.id?`0 3px 12px ${G}44`:"none"}}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+      <div className="view-toggle">
+        <button onClick={()=>setMobile(false)}
+          style={{background:!mobile?`${G}22`:"transparent",color:!mobile?G:`${CR}55`}}>
+          🖥 Desktop
+        </button>
+        <button onClick={()=>setMobile(true)}
+          style={{background:mobile?`${G}22`:"transparent",color:mobile?G:`${CR}55`}}>
+          📱 Mobile
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── MOBILE FRAME ── */
+function MobileFrame({children}){
+  return(
+    <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",
+      background:`radial-gradient(ellipse at center,${NM} 0%,${NAV} 70%)`,padding:24,overflow:"auto"}}>
+      <div style={{width:375,minHeight:667,maxHeight:"calc(100vh - 130px)",
+        background:NAV,borderRadius:40,border:`2px solid ${G}33`,
+        boxShadow:`0 32px 80px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.04),0 0 40px ${G}18`,
+        display:"flex",flexDirection:"column",overflow:"hidden",position:"relative",flexShrink:0}}>
+        {/* notch */}
+        <div style={{height:36,display:"flex",alignItems:"center",justifyContent:"space-between",
+          padding:"0 24px",flexShrink:0}}>
+          <span className="mono" style={{fontSize:10,color:`${CR}66`}}>9:41</span>
+          <div style={{width:90,height:18,background:NAV,borderRadius:12,border:`1px solid ${G}22`}}/>
+          <span style={{fontSize:10,color:`${CR}66`}}>●●●</span>
+        </div>
+        <div style={{flex:1,overflow:"hidden"}}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
+/* ── SKELETON LOADER ── */
+function SkeletonFeed(){
+  return(
+    <div style={{padding:24,display:"flex",flexDirection:"column",gap:16}}>
+      <div style={{marginBottom:8}}>
+        <div className="skeleton" style={{width:160,height:10,marginBottom:8}}/>
+        <div className="skeleton" style={{width:220,height:22}}/>
+      </div>
+      {[1,2,3].map(i=>(
+        <div key={i} className="card" style={{padding:24}}>
+          <div style={{display:"flex",gap:14,marginBottom:16}}>
+            <div className="skeleton" style={{width:56,height:56,borderRadius:"50%",flexShrink:0}}/>
+            <div style={{flex:1,display:"flex",justifyContent:"space-between"}}>
+              <div>
+                <div className="skeleton" style={{width:140,height:14,marginBottom:8}}/>
+                <div className="skeleton" style={{width:180,height:10,marginBottom:6}}/>
+                <div className="skeleton" style={{width:100,height:9}}/>
+              </div>
+              <div className="skeleton" style={{width:48,height:48,borderRadius:8}}/>
+            </div>
+          </div>
+          <div className="skeleton" style={{width:"100%",height:80,borderRadius:10,marginBottom:12}}/>
+          <div style={{display:"flex",gap:8,marginBottom:14}}>
+            <div className="skeleton" style={{width:90,height:24,borderRadius:20}}/>
+            <div className="skeleton" style={{width:120,height:24,borderRadius:20}}/>
+          </div>
+          <div className="skeleton" style={{width:"100%",height:38,borderRadius:8}}/>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── ERROR TOAST ── */
+function ErrorToast({msg,onClose}){
+  return(
+    <div className="fade-up" style={{position:"fixed",bottom:24,left:"50%",transform:"translateX(-50%)",
+      background:`linear-gradient(135deg,${NM},${NL})`,border:`1px solid ${G}44`,borderRadius:12,
+      padding:"14px 20px",display:"flex",alignItems:"center",gap:14,zIndex:500,
+      boxShadow:`0 8px 32px rgba(0,0,0,.4),0 0 20px ${G}18`,maxWidth:480}}>
+      <div style={{width:32,height:32,background:`${G}18`,borderRadius:"50%",
+        display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,flexShrink:0}}>🚧</div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:12,color:G,letterSpacing:".1em",textTransform:"uppercase",marginBottom:3}}>Temporary Roadblock</div>
+        <div style={{fontSize:13,color:CR,lineHeight:1.5}}>{msg}</div>
+      </div>
+      <button onClick={onClose} style={{background:"none",border:"none",color:`${CR}55`,cursor:"pointer",fontSize:18,padding:"0 4px"}}>×</button>
+    </div>
+  );
+}
+
+/* ══════════════ TALENT FLOW ══════════════ */
+const TSTEPS=["landing","welcome","passion","growth","aspiration","character","dashboard"];
+const TLBLS=["Landing","Welcome","Passion","Growth","Aspiration","Character","Dashboard"];
+
+const NWA_STORIES=[
+  "A former Walmart Service Manager is now Operations Lead at Heartland Labs.",
+  "Recognized at The 1907 in Rogers — now a Supply Chain Analyst at Tyson Foods.",
+  "Spotted at Onyx HQ in Bentonville — now District Manager at Simmons Foods.",
+  "Met at The Ledger in Bentonville — now Regional Director at J.B. Hunt.",
+  "A Rogers shift lead earning $32k is now a People Ops Manager at $68k.",
+  "Vouched at Airship at Coler — landed an Operations role in 11 days.",
+];
+
+function TalentMobileContent({step,dir,animKey,ans,setAns,showQuote,traits,successStories,next,prev,go}){
+  const cur=TSTEPS[step];
+  const cls=dir==="right"?"slide-right":"slide-left";
+  const tickRef=useRef();
+
+  return(
+    <div style={{height:"100%",display:"flex",flexDirection:"column",background:NAV,
+      backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")"}}>
+      {/* progress bar */}
+      <div style={{padding:"12px 20px 0",flexShrink:0}}>
+        <div style={{display:"flex",gap:4}}>
+          {TSTEPS.map((_,i)=>(
+            <div key={i} style={{flex:1,height:2,borderRadius:2,background:i<=step?`linear-gradient(90deg,${G},${GL})`:NL,transition:"background .3s"}}/>
+          ))}
+        </div>
+        <div style={{fontSize:10,color:`${CR}44`,marginTop:6,letterSpacing:".1em"}}>{TLBLS[step].toUpperCase()}</div>
+      </div>
+
+      <div key={animKey} className={`${cls} scroll-y`} style={{flex:1,padding:"20px 20px 0",overflowX:"hidden"}}>
+
+        {cur==="landing" && <MobileLanding next={next} traits={traits}/>}
+        {cur==="welcome" && <MobileWelcome next={next} prev={prev} showQuote={showQuote}/>}
+        {cur==="passion" && (
+          <MobileTextStep step="2" title="What do you love doing?" hint="Think about moments when time disappears."
+            placeholder="I love building teams from scratch..." value={ans.passion}
+            onChange={v=>setAns(a=>({...a,passion:v}))} next={next} prev={prev} minLen={20}/>
+        )}
+        {cur==="growth" && (
+          <MobileTextStep step="3" title="What would you change?" hint="About your current role — no filter."
+            placeholder="I want a seat at the table where strategy gets made..." value={ans.growth}
+            onChange={v=>setAns(a=>({...a,growth:v}))} next={next} prev={prev}/>
+        )}
+        {cur==="aspiration" && (
+          <MobileTextStep step="4" title="Where do you want to be in 3 years?" hint="Don't be modest."
+            placeholder="Leading a regional operations team..." value={ans.aspiration}
+            onChange={v=>setAns(a=>({...a,aspiration:v}))} next={next} prev={prev}/>
+        )}
+        {cur==="character" && <MobileCharacter traits={traits} next={next} prev={prev}/>}
+        {cur==="dashboard" && <MobileDashboard stories={successStories}/>}
+      </div>
+
+      {/* thumb-zone nav */}
+      {cur!=="landing" && cur!=="dashboard" && (
+        <div style={{padding:"12px 20px 20px",flexShrink:0,borderTop:`1px solid ${G}11`}}>
+          <div style={{display:"flex",gap:10}}>
+            {step>0&&<button className="btn-ghost" onClick={prev} style={{padding:"14px 0",borderRadius:12,flex:1,fontSize:12}}>← Back</button>}
+            <button className="btn-gold" onClick={next}
+              disabled={cur==="passion"&&ans.passion.length<20}
+              style={{padding:"15px 0",borderRadius:12,flex:step>0?2:1,fontSize:12,
+                boxShadow:`0 4px 20px ${G}44`}}>
+              {cur==="character"?"Activate My Profile →":"Continue →"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MobileLanding({next}){
+  const ref=useRef();
+  const tilt=useTilt(ref);
+  return(
+    <div style={{textAlign:"center",paddingBottom:20}}>
+      <div style={{width:64,height:64,background:`linear-gradient(135deg,${G}22,${G}44)`,borderRadius:"50%",
+        margin:"8px auto 16px",border:`1px solid ${G}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <img src="https://i.pravatar.cc/50?img=12" style={{width:52,height:52,borderRadius:"50%"}} alt="scout"/>
+      </div>
+      <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:10}}>James Whitfield · SVP, Walmart</div>
+      <h1 style={{fontFamily:"Cormorant Garamond",fontSize:30,fontWeight:600,lineHeight:1.2,color:CR,marginBottom:14}}>
+        Maria, you're ready for<br/><span className="gold-text">something bigger.</span>
+      </h1>
+      <p style={{color:`${CR}77`,fontSize:13,lineHeight:1.7,marginBottom:20}}>
+        James has issued you a private Next Lane Golden Ticket — reserved for talent that doesn't show up on a résumé.
+      </p>
+      <div ref={ref} {...tilt} style={{background:`linear-gradient(135deg,${NL},${NM})`,
+        border:`1px solid ${G}66`,borderRadius:14,padding:"16px 18px",marginBottom:20,
+        display:"flex",alignItems:"center",gap:14,textAlign:"left",cursor:"default",
+        transition:"transform .15s ease,box-shadow .15s ease"}}>
+        <div style={{width:44,height:44,background:`linear-gradient(135deg,${GD},${G},${GL})`,borderRadius:9,
+          display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0,
+          boxShadow:`0 4px 14px ${G}44`}}>🎫</div>
+        <div>
+          <div style={{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:G,marginBottom:2}}>Golden Ticket · NWA 2025</div>
+          <div style={{fontFamily:"Cormorant Garamond",fontSize:17,color:CR}}>Maria Gutierrez</div>
+          <div className="mono" style={{fontSize:9,color:`${G}88`,marginTop:2}}>NL-NWA-2025-0047</div>
+        </div>
+      </div>
+      <button className="btn-gold" onClick={next}
+        style={{padding:"16px 0",borderRadius:14,fontSize:13,width:"100%",
+          boxShadow:`0 6px 24px ${G}44`}}>
+        Accept My Golden Ticket →
+      </button>
+    </div>
+  );
+}
+
+function MobileWelcome({next,prev,showQuote}){
+  return(
+    <div style={{paddingBottom:20}}>
+      <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>Step 1 of 5</div>
+      <h2 style={{fontFamily:"Cormorant Garamond",fontSize:28,color:CR,marginBottom:12}}>Welcome to the lane.</h2>
+      <p style={{color:`${CR}77`,fontSize:13,lineHeight:1.75,marginBottom:20}}>
+        Next Lane isn't a job board. It's a private career accelerator powered by leaders who've seen what you're capable of — before you proved it on paper.
+      </p>
+      <div style={{background:`${G}0D`,border:`1px solid ${G}33`,borderRadius:12,padding:18,marginBottom:16}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+          <img src="https://i.pravatar.cc/28?img=12" style={{width:26,height:26,borderRadius:"50%",border:`1px solid ${G}66`}} alt="scout"/>
+          <div>
+            <div style={{fontSize:12,color:GL,fontWeight:600}}>James Whitfield</div>
+            <div style={{fontSize:10,color:`${CR}55`}}>SVP Operations · Walmart</div>
+          </div>
+        </div>
+        {!showQuote?(
+          <div style={{display:"flex",alignItems:"center",gap:4,padding:"6px 0"}}>
+            <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/>
+          </div>
+        ):(
+          <p className="fade-up" style={{fontFamily:"Cormorant Garamond",fontSize:17,color:CR,lineHeight:1.65,fontStyle:"italic"}}>
+            "Maria leads with quiet authority. She turns first-time staff into loyal teams. The room changes when she walks in."
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MobileTextStep({step,title,hint,placeholder,value,onChange,next,prev,minLen=0}){
+  return(
+    <div style={{paddingBottom:8}}>
+      <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>Step {step} of 5</div>
+      <h2 style={{fontFamily:"Cormorant Garamond",fontSize:26,color:CR,marginBottom:6,lineHeight:1.25}}>{title}</h2>
+      <p style={{color:`${CR}55`,fontSize:13,marginBottom:18}}>{hint}</p>
+      <textarea value={value} onChange={e=>onChange(e.target.value)}
+        className="stationery"
+        placeholder={placeholder}
+        style={{width:"100%",minHeight:130,resize:"none",borderRadius:12,padding:16,outline:"none"}}/>
+      <div style={{textAlign:"right",fontSize:11,color:`${CR}44`,marginTop:6}}>{value.length} chars</div>
+    </div>
+  );
+}
+
+function MobileCharacter({traits,next,prev}){
+  return(
+    <div style={{paddingBottom:8}}>
+      <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>Step 5 of 5</div>
+      <h2 style={{fontFamily:"Cormorant Garamond",fontSize:28,color:CR,marginBottom:6}}>James sees this in you.</h2>
+      <p style={{color:`${CR}55`,fontSize:13,marginBottom:18}}>These traits earned you your Golden Ticket.</p>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+        {traits.map(t=>(
+          <div key={t.key} style={{background:t.active?`${G}15`:NL,border:`1px solid ${t.active?G+"66":G+"22"}`,borderRadius:12,padding:14}}>
+            <div style={{fontSize:22,marginBottom:6}}>{t.icon}</div>
+            <div style={{fontSize:12,fontWeight:600,marginBottom:3,color:t.active?GL:`${CR}55`}}>{t.key}</div>
+            <div style={{fontSize:10,color:`${CR}44`,lineHeight:1.4}}>{t.desc}</div>
+            {t.active&&<div style={{marginTop:7,display:"inline-block",fontSize:9,letterSpacing:".1em",
+              textTransform:"uppercase",color:G,background:`${G}15`,padding:"2px 7px",borderRadius:3}}>Verified ✓</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MobileDashboard({stories}){
+  return(
+    <div style={{paddingBottom:24}}>
+      <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{fontSize:36,marginBottom:8}}>🎫</div>
+        <h2 style={{fontFamily:"Cormorant Garamond",fontSize:30,color:CR,marginBottom:6}}>You're in the Lane.</h2>
+        <p style={{color:`${CR}66`,fontSize:13}}>Your profile is now visible to top NWA recruiters.</p>
+      </div>
+      <div className="card" style={{padding:18,marginBottom:12}}>
+        <div style={{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:G,marginBottom:14}}>Your Progress</div>
+        {[{l:"Active in Pool",d:true},{l:"Scout-Verified",d:true},{l:"Match Found",d:false},{l:"Recruiter Viewed",d:false}].map((s,i)=>(
+          <div key={s.l} style={{display:"flex",alignItems:"center",gap:12,marginBottom:i<3?10:0}}>
+            <div style={{width:24,height:24,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:11,fontWeight:700,background:s.d?`linear-gradient(135deg,${G},${GL})`:NL,
+              border:`1px solid ${s.d?G:G+"33"}`,color:s.d?NAV:`${CR}33`}}>{s.d?"✓":i+1}</div>
+            <span style={{fontSize:12,color:s.d?CR:`${CR}44`}}>{s.l}</span>
+            {s.d&&<div style={{marginLeft:"auto",fontSize:9,color:G,background:`${G}15`,padding:"1px 6px",borderRadius:3,letterSpacing:".08em"}}>DONE</div>}
+          </div>
+        ))}
+      </div>
+      <div style={{background:`linear-gradient(135deg,${NM},${NL})`,border:`1px solid ${G}44`,borderRadius:12,padding:16,marginBottom:12,display:"flex",gap:12,alignItems:"center"}}>
+        <div style={{position:"relative",flexShrink:0}}>
+          <img src="https://i.pravatar.cc/40?img=12" style={{width:44,height:44,borderRadius:"50%",border:`2px solid ${G}`}} alt="scout"/>
+          <div style={{position:"absolute",bottom:-3,right:-3,width:16,height:16,background:`linear-gradient(135deg,${G},${GL})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:8}}>✓</div>
+        </div>
+        <div>
+          <div style={{fontSize:10,color:G,letterSpacing:".1em",textTransform:"uppercase",marginBottom:2}}>Scout-Verified</div>
+          <div style={{fontSize:14,color:CR,fontWeight:500}}>James Whitfield</div>
+          <div style={{fontSize:11,color:`${CR}66`}}>SVP Operations · Walmart</div>
+        </div>
+      </div>
+      <div className="card" style={{padding:"12px 0",overflow:"hidden",position:"relative"}}>
+        <div style={{position:"absolute",left:0,top:0,bottom:0,width:24,zIndex:2,background:`linear-gradient(90deg,${NM},transparent)`}}/>
+        <div style={{position:"absolute",right:0,top:0,bottom:0,width:24,zIndex:2,background:`linear-gradient(-90deg,${NM},transparent)`}}/>
+        <div style={{fontSize:9,letterSpacing:".15em",textTransform:"uppercase",color:G,padding:"0 16px 8px"}}>SUCCESS STORIES</div>
+        <div style={{overflow:"hidden",paddingLeft:16}}>
+          <div style={{display:"flex",gap:48,animation:"tickerScroll 22s linear infinite",whiteSpace:"nowrap"}}>
+            {[...stories,...stories].map((s,i)=>(
+              <span key={i} style={{fontSize:11,color:`${CR}77`,whiteSpace:"nowrap"}}>
+                <span style={{color:G,marginRight:5}}>✦</span>{s}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── DESKTOP TALENT ── */
+function TalentDesktop({step,dir,animKey,ans,setAns,showQuote,traits,successStories,next,prev,go}){
+  const cur=TSTEPS[step];
+  const cls=dir==="right"?"slide-right":"slide-left";
+  const tiltRef=useRef();
+  const tilt=useTilt(tiltRef);
+
+  return(
+    <div style={{display:"flex",height:"calc(100vh - 58px)",overflow:"hidden"}}>
+      {/* sidebar */}
+      <div style={{width:200,background:NM,borderRight:`1px solid ${G}22`,padding:"28px 0",flexShrink:0}}>
+        <div style={{padding:"0 18px 20px",borderBottom:`1px solid ${G}11`}}>
+          <div style={{fontSize:10,letterSpacing:".14em",color:`${CR}55`,textTransform:"uppercase",marginBottom:4}}>Talent Journey</div>
+          <div style={{fontFamily:"Cormorant Garamond",fontSize:16,color:CR}}>Maria's Path</div>
+        </div>
+        {TSTEPS.map((s,i)=>(
+          <div key={s} onClick={()=>go(i)} style={{padding:"10px 18px",cursor:"pointer",display:"flex",alignItems:"center",gap:9,
+            background:step===i?`${G}11`:"transparent",borderLeft:step===i?`2px solid ${G}`:"2px solid transparent",transition:"all .2s"}}>
+            <div style={{width:21,height:21,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",
+              fontSize:10,fontWeight:700,background:i<step?`linear-gradient(135deg,${G},${GL})`:i===step?"transparent":NL,
+              border:i===step?`1px solid ${G}`:"none",color:i<step?NAV:i===step?G:`${CR}44`}}>
+              {i<step?"✓":i+1}
+            </div>
+            <span style={{fontSize:12,fontWeight:step===i?600:400,color:step===i?CR:i<step?`${CR}88`:`${CR}44`}}>{TLBLS[i]}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* main */}
+      <div className="scroll-y" style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:44,position:"relative",overflowX:"hidden"}}>
+        <div style={{position:"absolute",top:"8%",right:"4%",width:300,height:300,borderRadius:"50%",background:`radial-gradient(circle,${G}09 0%,transparent 70%)`,pointerEvents:"none"}}/>
+
+        {cur==="landing"&&(
+          <div key={animKey} className={cls} style={{maxWidth:460,width:"100%",textAlign:"center"}}>
+            <div style={{width:72,height:72,background:`linear-gradient(135deg,${G}22,${G}44)`,borderRadius:"50%",margin:"0 auto 20px",border:`1px solid ${G}55`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <img src="https://i.pravatar.cc/56?img=12" style={{width:56,height:56,borderRadius:"50%"}} alt="scout"/>
+            </div>
+            <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:12}}>James Whitfield · SVP Operations, Walmart</div>
+            <h1 style={{fontFamily:"Cormorant Garamond",fontSize:42,fontWeight:600,lineHeight:1.15,color:CR,marginBottom:16}}>
+              Maria, James thinks<br/>you're ready for<br/><span className="gold-text">something bigger.</span>
+            </h1>
+            <p style={{color:`${CR}77`,fontSize:14,lineHeight:1.78,marginBottom:28}}>He has issued you a Next Lane Golden Ticket — a private invitation reserved for the kind of talent that doesn't show up on a résumé.</p>
+            <div ref={tiltRef} {...tilt} style={{background:`linear-gradient(135deg,${NL},${NM})`,border:`1px solid ${G}66`,borderRadius:16,padding:"18px 22px",marginBottom:26,display:"flex",alignItems:"center",gap:16,textAlign:"left",cursor:"default",transition:"transform .15s,box-shadow .15s"}}>
+              <div style={{width:50,height:50,background:`linear-gradient(135deg,${GD},${G},${GL})`,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,flexShrink:0,boxShadow:`0 4px 14px ${G}44`}}>🎫</div>
+              <div>
+                <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:2}}>Golden Ticket · NWA Cohort 2025</div>
+                <div style={{fontFamily:"Cormorant Garamond",fontSize:19,color:CR}}>Exclusively for Maria Gutierrez</div>
+                <div className="mono" style={{fontSize:9,color:`${G}88`,marginTop:3}}>NL-NWA-2025-0047</div>
+              </div>
+            </div>
+            <button className="btn-gold" onClick={next} style={{padding:"15px 44px",borderRadius:10,fontSize:12,width:"100%"}}>Accept My Golden Ticket →</button>
+          </div>
+        )}
+
+        {cur==="welcome"&&(
+          <div key={animKey} className={cls} style={{maxWidth:460,width:"100%"}}>
+            <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>Step 1 of 5</div>
+            <h2 style={{fontFamily:"Cormorant Garamond",fontSize:36,color:CR,marginBottom:12}}>Welcome to the lane.</h2>
+            <p style={{color:`${CR}77`,fontSize:14,lineHeight:1.78,marginBottom:24}}>Next Lane isn't a job board. It's a private career accelerator powered by the endorsement of leaders who've seen what you're capable of — before you had the chance to prove it on paper.</p>
+            <div style={{background:`${G}0D`,border:`1px solid ${G}33`,borderRadius:10,padding:18,marginBottom:26}}>
+              <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                <img src="https://i.pravatar.cc/28?img=12" style={{width:28,height:28,borderRadius:"50%",border:`1px solid ${G}66`}} alt="scout"/>
+                <div>
+                  <div style={{fontSize:12,color:GL,fontWeight:600}}>James Whitfield</div>
+                  <div style={{fontSize:10,color:`${CR}55`}}>SVP Operations · Walmart</div>
+                </div>
+                <div style={{marginLeft:"auto",fontSize:9,color:G,background:`${G}15`,padding:"2px 7px",borderRadius:3,letterSpacing:".08em"}}>PERSONALLY WROTE</div>
+              </div>
+              {!showQuote?(
+                <div style={{display:"flex",alignItems:"center",gap:4,padding:"6px 0"}}>
+                  <span className="typing-dot"/><span className="typing-dot"/><span className="typing-dot"/>
+                </div>
+              ):(
+                <p className="fade-up" style={{fontFamily:"Cormorant Garamond",fontSize:18,color:CR,lineHeight:1.65,fontStyle:"italic"}}>
+                  "Maria leads with quiet authority. She turns first-time staff into loyal teams. The room changes when she walks in."
+                </p>
+              )}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn-ghost" onClick={prev} style={{padding:"13px 22px",borderRadius:9,flex:1}}>← Back</button>
+              <button className="btn-gold" onClick={next} style={{padding:"13px 22px",borderRadius:9,flex:2}}>This is me. Let's go →</button>
+            </div>
+          </div>
+        )}
+
+        {(cur==="passion"||cur==="growth"||cur==="aspiration")&&(
+          <div key={animKey} className={cls} style={{maxWidth:460,width:"100%"}}>
+            <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>
+              Step {cur==="passion"?"2":cur==="growth"?"3":"4"} of 5
+            </div>
+            <h2 style={{fontFamily:"Cormorant Garamond",fontSize:36,color:CR,marginBottom:6}}>
+              {cur==="passion"?"What do you love doing?":cur==="growth"?"What would you change?":"Where do you want to be in 3 years?"}
+            </h2>
+            <p style={{color:`${CR}55`,fontSize:13,marginBottom:20}}>
+              {cur==="passion"?"Think about moments when time disappears.":cur==="growth"?"About your current role — no filter needed.":"Don't be modest. James believed in you before you said a word."}
+            </p>
+            <textarea
+              value={cur==="passion"?ans.passion:cur==="growth"?ans.growth:ans.aspiration}
+              onChange={e=>{const v=e.target.value;setAns(a=>({...a,[cur]:v}))}}
+              className="stationery"
+              placeholder={cur==="passion"?"I love building teams from scratch...":cur==="growth"?"I want a seat at the table where strategy gets made...":"Leading a regional operations team..."}
+              style={{width:"100%",minHeight:130,resize:"none",borderRadius:10,padding:18,outline:"none"}}/>
+            <div style={{textAlign:"right",fontSize:11,color:`${CR}44`,margin:"5px 0 20px"}}>
+              {(cur==="passion"?ans.passion:cur==="growth"?ans.growth:ans.aspiration).length} characters
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn-ghost" onClick={prev} style={{padding:"13px 22px",borderRadius:9,flex:1}}>← Back</button>
+              <button className="btn-gold" onClick={next} disabled={cur==="passion"&&ans.passion.length<20}
+                style={{padding:"13px 22px",borderRadius:9,flex:2}}>{cur==="aspiration"?"Almost there →":"Continue →"}</button>
+            </div>
+          </div>
+        )}
+
+        {cur==="character"&&(
+          <div key={animKey} className={cls} style={{maxWidth:460,width:"100%"}}>
+            <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:8}}>Step 5 of 5</div>
+            <h2 style={{fontFamily:"Cormorant Garamond",fontSize:36,color:CR,marginBottom:6}}>James sees this in you.</h2>
+            <p style={{color:`${CR}55`,fontSize:13,marginBottom:22}}>These are the traits that earned you your Golden Ticket.</p>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:11,marginBottom:26}}>
+              {traits.map(t=>(
+                <div key={t.key} style={{background:t.active?`${G}15`:NL,border:`1px solid ${t.active?G+"66":G+"22"}`,borderRadius:12,padding:15}}>
+                  <div style={{fontSize:24,marginBottom:7}}>{t.icon}</div>
+                  <div style={{fontSize:13,fontWeight:600,marginBottom:3,color:t.active?GL:`${CR}55`}}>{t.key}</div>
+                  <div style={{fontSize:11,color:`${CR}44`,lineHeight:1.4}}>{t.desc}</div>
+                  {t.active&&<div style={{marginTop:7,display:"inline-block",fontSize:9,letterSpacing:".1em",textTransform:"uppercase",color:G,background:`${G}15`,padding:"2px 7px",borderRadius:3}}>Verified ✓</div>}
+                </div>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:10}}>
+              <button className="btn-ghost" onClick={prev} style={{padding:"13px 22px",borderRadius:9,flex:1}}>← Back</button>
+              <button className="btn-gold" onClick={next} style={{padding:"13px 22px",borderRadius:9,flex:2}}>Activate My Profile →</button>
+            </div>
+          </div>
+        )}
+
+        {cur==="dashboard"&&(
+          <div key={animKey} className={cls} style={{maxWidth:620,width:"100%"}}>
+            <div style={{textAlign:"center",marginBottom:26}}>
+              <div style={{fontSize:38,marginBottom:8}}>🎫</div>
+              <h2 style={{fontFamily:"Cormorant Garamond",fontSize:36,color:CR,marginBottom:6}}>You're in the Lane.</h2>
+              <p style={{color:`${CR}66`,fontSize:13}}>James has vouched for you. Your profile is now visible to top NWA recruiters.</p>
+            </div>
+            <div className="card" style={{padding:22,marginBottom:14}}>
+              <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:16}}>Your Progress</div>
+              <div style={{display:"flex",alignItems:"center"}}>
+                {[{l:"Active in Pool",d:true},{l:"Scout-Verified",d:true},{l:"Match Found",d:false},{l:"Recruiter Viewed",d:false}].map((s,i,arr)=>(
+                  <div key={s.l} style={{display:"flex",alignItems:"center",flex:1}}>
+                    <div style={{display:"flex",flexDirection:"column",alignItems:"center",flex:1}}>
+                      <div style={{width:30,height:30,borderRadius:"50%",marginBottom:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,background:s.d?`linear-gradient(135deg,${G},${GL})`:NL,border:`1px solid ${s.d?G:G+"33"}`,color:s.d?NAV:`${CR}33`}}>{s.d?"✓":i+1}</div>
+                      <span style={{fontSize:9,textAlign:"center",lineHeight:1.3,color:s.d?GL:`${CR}44`}}>{s.l}</span>
+                    </div>
+                    {i<arr.length-1&&<div style={{height:1,width:18,flexShrink:0,marginBottom:22,background:s.d?`${G}55`:`${G}11`}}/>}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{background:`linear-gradient(135deg,${NM},${NL})`,border:`1px solid ${G}55`,borderRadius:12,padding:18,display:"flex",gap:14,alignItems:"center",marginBottom:14}}>
+              <div style={{position:"relative",flexShrink:0}}>
+                <img src="https://i.pravatar.cc/44?img=12" style={{width:48,height:48,borderRadius:"50%",border:`2px solid ${G}`}} alt="scout"/>
+                <div style={{position:"absolute",bottom:-3,right:-3,width:18,height:18,background:`linear-gradient(135deg,${G},${GL})`,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:9}}>✓</div>
+              </div>
+              <div>
+                <div style={{fontSize:10,color:G,letterSpacing:".1em",textTransform:"uppercase",marginBottom:2}}>Scout-Verified Badge</div>
+                <div style={{fontSize:14,color:CR,fontWeight:500}}>James Whitfield</div>
+                <div style={{fontSize:11,color:`${CR}66`}}>SVP Operations · Walmart</div>
+              </div>
+              <div style={{marginLeft:"auto",background:`${G}22`,border:`1px solid ${G}44`,borderRadius:7,padding:"5px 12px"}}>
+                <div style={{fontSize:9,color:G,letterSpacing:".1em",textTransform:"uppercase"}}>VERIFIED</div>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:11,marginBottom:14}}>
+              {[{n:"4",l:"Recruiters who viewed your profile"},{n:"1",l:"Meeting requests pending"}].map(s=>(
+                <div key={s.l} className="card" style={{padding:16,textAlign:"center"}}>
+                  <div className="mono" style={{fontSize:28,color:G,fontWeight:700}}>{s.n}</div>
+                  <div style={{fontSize:11,color:`${CR}66`,marginTop:3}}>{s.l}</div>
+                </div>
+              ))}
+            </div>
+            {/* Success ticker */}
+            <div className="card" style={{padding:"12px 0",overflow:"hidden",position:"relative"}}>
+              <div style={{position:"absolute",left:0,top:0,bottom:0,width:28,zIndex:2,background:`linear-gradient(90deg,${NM},transparent)`}}/>
+              <div style={{position:"absolute",right:0,top:0,bottom:0,width:28,zIndex:2,background:`linear-gradient(-90deg,${NM},transparent)`}}/>
+              <div style={{fontSize:9,letterSpacing:".14em",textTransform:"uppercase",color:G,padding:"0 16px 7px"}}>NWA SUCCESS STORIES</div>
+              <div style={{overflow:"hidden",paddingLeft:16}}>
+                <div style={{display:"flex",gap:56,animation:"tickerScroll 26s linear infinite",whiteSpace:"nowrap"}}>
+                  {[...successStories,...successStories].map((s,i)=>(
+                    <span key={i} style={{fontSize:11,color:`${CR}77`,whiteSpace:"nowrap"}}>
+                      <span style={{color:G,marginRight:5}}>✦</span>{s}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* mobile hint panel */}
+      <div style={{width:200,borderLeft:`1px solid ${G}22`,background:NM,padding:18,display:"flex",flexDirection:"column",gap:11}}>
+        <div style={{fontSize:9,letterSpacing:".14em",textTransform:"uppercase",color:`${CR}44`}}>Mobile Preview</div>
+        <div style={{background:NAV,border:`2px solid ${G}33`,borderRadius:18,padding:14,flex:1}}>
+          <div style={{fontSize:9,color:G,marginBottom:7,letterSpacing:".1em"}}>NEXT LANE · {TLBLS[step].toUpperCase()}</div>
+          <div style={{width:"100%",height:2,background:`${G}22`,borderRadius:2,marginBottom:12,overflow:"hidden"}}>
+            <div style={{width:`${((step+1)/TSTEPS.length)*100}%`,height:"100%",background:`linear-gradient(90deg,${G},${GL})`,transition:"width .4s"}}/>
+          </div>
+          <div style={{color:`${CR}55`,fontSize:10,lineHeight:1.7}}>
+            Step {step+1} of {TSTEPS.length}<br/>
+            {cur==="landing"?"Personalized Scout invite":cur==="dashboard"?"Profile live · Recruiters notified":"Conversational onboarding"}
+          </div>
+        </div>
+        <div style={{fontSize:9,color:`${CR}33`,lineHeight:1.6}}>100% mobile-optimized.<br/>All steps &lt;2s on LTE.</div>
+      </div>
+    </div>
+  );
+}
+
+function TalentFlow({mobile}){
+  const [step,setStep]=useState(0);
+  const [dir,setDir]=useState("right");
+  const [ans,setAns]=useState({passion:"",growth:"",aspiration:""});
+  const [showQuote,setShowQuote]=useState(false);
+  const [animKey,setAnimKey]=useState(0);
+  const traits=[
+    {key:"Coachability",icon:"🧠",desc:"Adapts fast, listens deeply",active:true},
+    {key:"Emotional Intelligence",icon:"💡",desc:"Reads rooms, builds loyalty",active:true},
+    {key:"Motivation",icon:"🔥",desc:"Driven to outperform",active:false},
+    {key:"Temperament",icon:"⚖️",desc:"Steady under pressure",active:false},
+  ];
+
+  const go=n=>{
+    setDir(n>step?"right":"left");setStep(n);setAnimKey(k=>k+1);
+    if(TSTEPS[n]==="welcome"){setShowQuote(false);setTimeout(()=>setShowQuote(true),1600);}
+  };
+  const next=()=>go(Math.min(step+1,TSTEPS.length-1));
+  const prev=()=>go(Math.max(step-1,0));
+
+  const props={step,dir,animKey,ans,setAns,showQuote,traits,successStories:NWA_STORIES,next,prev,go};
+  if(mobile) return <TalentMobileContent {...props}/>;
+  return <TalentDesktop {...props}/>;
+}
+
+/* ══════════════ SCOUT FLOW ══════════════ */
+function ScoutFlow({mobile}){
+  const [tab,setTab]=useState("command");
+  const [vouch,setVouch]=useState("");
+  const [selTraits,setSelTraits]=useState([]);
+  const [sent,setSent]=useState(false);
+  const [ignited,setIgnited]=useState(false);
+  const [borderIgnite,setBorderIgnite]=useState(false);
+  const prevLen=useRef(0);
+  const [zeroState]=useState(false); // toggle to true to preview zero state
+
+  useEffect(()=>{
+    if(prevLen.current<250&&vouch.length>=250){
+      setIgnited(true);setBorderIgnite(true);
+      if(navigator.vibrate)navigator.vibrate([40,20,80]);
+      setTimeout(()=>setIgnited(false),700);
+      setTimeout(()=>setBorderIgnite(false),700);
+    }
+    prevLen.current=vouch.length;
+  },[vouch]);
+
+  const toggleTrait=t=>setSelTraits(s=>s.includes(t)?s.filter(x=>x!==t):[...s,t]);
+  const slots=[{s:"filled",l:"NL-047"},{s:"filled",l:"NL-031"},{s:"pending",l:"Pending"},{s:"empty"},{s:"empty"}];
+
+  const sidebar=(
+    <div style={{width:mobile?0:200,maxWidth:mobile?0:200,overflow:"hidden",
+      background:NM,borderRight:mobile?"":`1px solid ${G}22`,padding:mobile?"":"32px 0",flexShrink:0,
+      transition:"all .3s",display:mobile?"none":"flex",flexDirection:"column"}}>
+      <div style={{padding:"0 20px 22px",borderBottom:`1px solid ${G}11`}}>
+        <div style={{fontSize:10,letterSpacing:".14em",color:`${CR}55`,textTransform:"uppercase",marginBottom:4}}>Scout Center</div>
+        <div style={{fontFamily:"Cormorant Garamond",fontSize:16,color:CR}}>James Whitfield</div>
+        <div style={{fontSize:11,color:`${CR}55`}}>SVP Operations · Walmart</div>
+      </div>
+      {[{id:"command",label:"Command Center"},{id:"nominate",label:"Nominate Talent"},{id:"leaderboard",label:"Leaderboard"}].map(s=>(
+        <div key={s.id} onClick={()=>{setTab(s.id);setSent(false);}}
+          style={{padding:"11px 20px",cursor:"pointer",borderLeft:tab===s.id?`2px solid ${G}`:"2px solid transparent",
+            background:tab===s.id?`${G}11`:"transparent",fontSize:12,fontWeight:tab===s.id?600:400,
+            color:tab===s.id?CR:`${CR}55`,transition:"all .2s"}}>
+          {s.label}
+        </div>
+      ))}
+    </div>
+  );
+
+  const commandContent=(
+    <div className="fade-up">
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:6}}>Command Center</div>
+        <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?28:32,color:CR}}>
+          {zeroState?"Mission Awaiting Activation":"Your Impact Dashboard"}
+        </h2>
+      </div>
+
+      {zeroState?(
+        <div className="card mission-pulse" style={{padding:40,textAlign:"center",border:`1px solid ${G}33`,marginBottom:20}}>
+          <div style={{fontSize:48,marginBottom:16}}>🎫</div>
+          <h3 style={{fontFamily:"Cormorant Garamond",fontSize:26,color:CR,marginBottom:10}}>Your first discovery is waiting.</h3>
+          <p style={{color:`${CR}66`,fontSize:14,lineHeight:1.7,marginBottom:24,maxWidth:320,margin:"0 auto 24px"}}>
+            Use a Golden Ticket to begin your legacy. One vouch can change the trajectory of someone's entire career.
+          </p>
+          <button className="btn-gold" style={{padding:"13px 32px",borderRadius:10}}>Issue Your First Ticket →</button>
+        </div>
+      ):(
+        <>
+          <div style={{display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:20}}>
+            {[{l:"Lives Changed",v:"7",i:"✨"},{l:"Active Nominations",v:"3",i:"📋"},{l:"Codes Remaining",v:"2",i:"🎫"},{l:"Pending Earned",v:"1",i:"⏳"}].map(s=>(
+              <div key={s.l} className="card card-glow" style={{padding:"18px 12px",textAlign:"center",transition:"all .2s"}}>
+                <div style={{fontSize:22,marginBottom:7}}>{s.i}</div>
+                <div className="mono" style={{fontSize:30,color:G,fontWeight:700,lineHeight:1}}>{s.v}</div>
+                <div style={{fontSize:10,color:`${CR}66`,marginTop:4}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Code inventory shelf */}
+          <div className="card" style={{padding:22,marginBottom:16}}>
+            <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:5}}>Code Inventory</div>
+            <div style={{fontSize:11,color:`${CR}55`,marginBottom:16}}>Each slot represents a potential life changed. Empty slots are a mission awaiting discovery.</div>
+            <div style={{display:"flex",gap:10,alignItems:"flex-end"}}>
+              {slots.map((sl,i)=>(
+                <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",gap:5}}>
+                  <div className={`code-slot ${sl.s==="filled"?"filled":sl.s==="pending"?"":"empty"}`}
+                    style={{background:sl.s==="pending"?`${G}08`:undefined,borderColor:sl.s==="pending"?`${G}44`:undefined}}>
+                    {sl.s==="filled"?"🎫":sl.s==="pending"?"⏳":""}
+                  </div>
+                  <div className="mono" style={{fontSize:8,color:sl.s==="filled"?G:sl.s==="pending"?`${G}66`:`${CR}22`,letterSpacing:".1em"}}>
+                    {sl.s==="filled"?sl.l:sl.s==="pending"?"PENDING":"EMPTY"}
+                  </div>
+                </div>
+              ))}
+              <div style={{marginLeft:"auto",textAlign:"right"}}>
+                <div style={{fontSize:10,color:`${CR}44`,marginBottom:3}}>Earn more by</div>
+                <div style={{fontSize:12,color:GL}}>placing your nominees →</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="card" style={{padding:22,marginBottom:16}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div>
+                <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:2}}>Legacy Progress</div>
+                <div style={{fontFamily:"Cormorant Garamond",fontSize:20,color:CR}}>Visionary Tier · 7 Placements</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:10,color:`${CR}55`}}>Next milestone</div>
+                <div style={{fontSize:12,color:GL}}>10 → Legend</div>
+              </div>
+            </div>
+            <div style={{height:7,background:NL,borderRadius:4,overflow:"hidden"}}>
+              <div style={{width:"70%",height:"100%",background:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:4}}/>
+            </div>
+            <div style={{display:"flex",justifyContent:"space-between",marginTop:6,fontSize:9,color:`${CR}44`}}>
+              <span>0</span><span>7 / 10 placements</span><span>10</span>
+            </div>
+          </div>
+
+          <div className="card" style={{padding:22}}>
+            <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:14}}>Incentive Tracking</div>
+            <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"repeat(3,1fr)",gap:12}}>
+              {[{l:"Charitable Donations",v:"$3,500",s:"NWA Food Bank"},{l:"Equity Participation",v:"0.12%",s:"Vested at Series A"},{l:"Community Impact",v:"7 families",s:"NWA career ladder"}].map(inc=>(
+                <div key={inc.l} style={{background:`${G}08`,border:`1px solid ${G}22`,borderRadius:9,padding:14}}>
+                  <div className="mono" style={{fontSize:22,color:GL,marginBottom:3}}>{inc.v}</div>
+                  <div style={{fontSize:11,color:CR,fontWeight:500,marginBottom:2}}>{inc.l}</div>
+                  <div style={{fontSize:10,color:`${CR}44`}}>{inc.s}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const nominateContent=(
+    <div className="fade-up" style={{maxWidth:520}}>
+      {sent?(
+        <div style={{textAlign:"center",padding:"50px 0"}}>
+          <div style={{fontSize:52,marginBottom:18}}>🎫</div>
+          <h2 style={{fontFamily:"Cormorant Garamond",fontSize:36,color:CR,marginBottom:8}}>Golden Ticket Issued.</h2>
+          <p style={{color:`${CR}66`,fontSize:14,marginBottom:26}}>Your nomination has been sent. Sarah will receive her personalized invitation within minutes.</p>
+          <button className="btn-gold" onClick={()=>{setSent(false);setVouch("");setSelTraits([]);}} style={{padding:"13px 32px",borderRadius:9}}>Nominate Another →</button>
+        </div>
+      ):(
+        <>
+          <div style={{marginBottom:24}}>
+            <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:6}}>Nomination Workflow</div>
+            <h2 style={{fontFamily:"Cormorant Garamond",fontSize:32,color:CR,marginBottom:3}}>Vouch for someone.</h2>
+            <p style={{color:`${CR}55`,fontSize:13}}>You have <span style={{color:G}}>2 codes remaining</span>. Each nomination carries your professional reputation.</p>
+          </div>
+          <div className="card" style={{padding:18,marginBottom:12}}>
+            <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}55`,marginBottom:9}}>Talent Information</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+              <input placeholder="First Name"/><input placeholder="Last Name"/>
+              <input placeholder="Mobile Number"/><input placeholder="Email (optional)"/>
+            </div>
+          </div>
+          <div className="card" style={{padding:18,marginBottom:12}}>
+            <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}55`,marginBottom:9}}>Character Traits Identified</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+              {["Coachability","Emotional Intelligence","Motivation","Temperament"].map(t=>{
+                const on=selTraits.includes(t);
+                return(
+                  <div key={t} onClick={()=>toggleTrait(t)}
+                    style={{padding:"11px 13px",borderRadius:7,cursor:"pointer",border:`1px solid ${on?G+"66":G+"22"}`,
+                      background:on?`${G}15`:NL,color:on?GL:`${CR}66`,fontSize:12,fontWeight:500,
+                      transition:"all .15s",display:"flex",alignItems:"center",gap:7}}>
+                    <span style={{fontSize:14}}>{on?"✓":"○"}</span>{t}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* stationery vouch */}
+          <div style={{marginBottom:20}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+              <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}55`}}>Letter of Recommendation</div>
+              <div style={{fontSize:10,color:vouch.length>=250?G:`${CR}44`,transition:"color .3s"}}>
+                <span className="mono">{vouch.length}</span> / 250 min
+              </div>
+            </div>
+            <textarea value={vouch} onChange={e=>setVouch(e.target.value)}
+              className={`stationery${borderIgnite?" ignite-border":""}`}
+              placeholder="Write as though you're penning a letter of recommendation. What specifically sets this person apart? Why would you stake your professional reputation on them?"
+              style={{width:"100%",minHeight:140,resize:"none",borderRadius:10,padding:18,outline:"none"}}/>
+            {vouch.length>0&&vouch.length<250&&(
+              <div style={{fontSize:10,color:`${CR}44`,marginTop:5}}>{250-vouch.length} more characters to ensure this vouch carries weight.</div>
+            )}
+            {vouch.length>=250&&(
+              <div className="fade-up" style={{fontSize:10,color:G,marginTop:5}}>✓ This vouch is ready to carry your professional weight.</div>
+            )}
+          </div>
+          <button className={`btn-gold${ignited?" ignited":""}`} disabled={vouch.length<250}
+            onClick={()=>setSent(true)}
+            style={{width:"100%",padding:15,borderRadius:9,fontSize:12,transition:"all .3s"}}>
+            {vouch.length>=250?"Issue Golden Ticket →":"Complete your vouch to continue"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+
+  const leaderboardContent=(
+    <div className="fade-up">
+      <div style={{marginBottom:24}}>
+        <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:6}}>NWA Cohort · 2025</div>
+        <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?28:32,color:CR}}>Visionary Rankings</h2>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+        {[
+          {rank:1,name:"Aric Marshall",  title:"Product Marketing · Apple",    placements:14,change:"+2",you:false},
+          {rank:2,name:"Cade Collister", title:"Founder · Acumen Brands",       placements:11,change:"—", you:false},
+          {rank:3,name:"James Whitfield",title:"SVP Operations · Walmart",      placements:7, change:"+1",you:true},
+          {rank:4,name:"Sandra Lee",     title:"VP Supply Chain · Tyson",       placements:5, change:"+3",you:false},
+          {rank:5,name:"Marcus Webb",    title:"Director Logistics · J.B. Hunt",placements:3, change:"—", you:false},
+        ].map(s=>(
+          <div key={s.name} className="card card-glow"
+            style={{padding:"13px 18px",display:"flex",alignItems:"center",gap:12,transition:"all .2s",
+              border:s.you?`1px solid ${G}55`:undefined,background:s.you?`${G}08`:undefined}}>
+            <div style={{width:30,height:30,borderRadius:"50%",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700,fontSize:13,background:s.rank<=2?`linear-gradient(135deg,${G},${GL})`:NL,color:s.rank<=2?NAV:`${CR}66`}}>
+              {s.rank===1?"🥇":s.rank===2?"🥈":s.rank}
+            </div>
+            <img src={`https://i.pravatar.cc/34?img=${s.rank+10}`} style={{width:38,height:38,borderRadius:"50%",border:`1px solid ${s.you?G:G+"33"}`}} alt={s.name}/>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:600,color:s.you?GL:CR,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                {s.name}{s.you&&<span style={{fontSize:9,color:G,background:`${G}22`,padding:"1px 5px",borderRadius:3,marginLeft:7}}>YOU</span>}
+              </div>
+              <div style={{fontSize:10,color:`${CR}55`,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{s.title}</div>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}>
+              <div className="mono" style={{fontSize:20,color:G}}>{s.placements}</div>
+              <div style={{fontSize:9,color:`${CR}44`}}>placed</div>
+            </div>
+            <div style={{width:28,textAlign:"center",fontSize:10,color:s.change.startsWith("+")?`#4CAF50`:`${CR}44`,flexShrink:0}}>{s.change}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if(mobile){
+    return(
+      <div style={{height:"100%",display:"flex",flexDirection:"column",background:NAV,backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")"}}>
+        <div style={{display:"flex",borderBottom:`1px solid ${G}11`,flexShrink:0}}>
+          {[{id:"command",l:"Dashboard"},{id:"nominate",l:"Nominate"},{id:"leaderboard",l:"Rankings"}].map(t=>(
+            <button key={t.id} onClick={()=>{setTab(t.id);setSent(false);}}
+              style={{flex:1,padding:"10px 4px",border:"none",cursor:"pointer",fontFamily:"DM Sans",
+                fontSize:10,fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",
+                background:tab===t.id?`${G}18`:"transparent",
+                color:tab===t.id?G:`${CR}55`,borderBottom:tab===t.id?`2px solid ${G}`:"2px solid transparent",transition:"all .2s"}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+        <div className="scroll-y" style={{flex:1,padding:20}}>
+          {tab==="command"&&commandContent}
+          {tab==="nominate"&&nominateContent}
+          {tab==="leaderboard"&&leaderboardContent}
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{display:"flex",height:"calc(100vh - 58px)",overflow:"hidden"}}>
+      {sidebar}
+      <div className="scroll-y" style={{flex:1,padding:36}}>
+        {tab==="command"&&commandContent}
+        {tab==="nominate"&&nominateContent}
+        {tab==="leaderboard"&&leaderboardContent}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════ RECRUITER FLOW ══════════════ */
+function RecruiterFlow({mobile}){
+  const [tab,setTab]=useState("loading");
+  const [expanded,setExpanded]=useState(null);
+  const [ratings,setRatings]=useState({});
+  const [followed,setFollowed]=useState({});
+
+  // simulate skeleton → feed
+  useEffect(()=>{
+    if(tab==="loading"){setTimeout(()=>setTab("feed"),2200);}
+  },[tab]);
+
+  const talents=[
+    {id:1,name:"Maria Gutierrez",role:"Restaurant GM → Operations Leader",location:"Bentonville, AR",
+     traits:["Coachability","Emotional Intelligence"],score:97,img:21,
+     breakdown:"90% Coachability + 95% EQ · Vouched by SVP at Walmart",
+     scout:"James Whitfield",scoutTitle:"SVP Operations · Walmart",scoutImg:12,
+     vouch:"Maria leads with quiet authority. She turns first-time staff into loyal, high-performing teams. The room changes when she walks in."},
+    {id:2,name:"DeShawn Okafor",role:"Warehouse Supervisor → Supply Chain Mgr",location:"Rogers, AR",
+     traits:["Motivation","Temperament"],score:94,img:22,
+     breakdown:"88% Motivation + 96% Temperament · Vouched by Apple Product Lead",
+     scout:"Aric Marshall",scoutTitle:"Product Marketing · Apple",scoutImg:13,
+     vouch:"DeShawn has an extraordinary systems mind. He solved a $2M inventory problem in his third week. He just needs the right stage."},
+    {id:3,name:"Lucia Fernández",role:"Shift Lead → District Manager",location:"Fayetteville, AR",
+     traits:["Emotional Intelligence","Temperament"],score:91,img:23,
+     breakdown:"93% EQ + 89% Temperament · Vouched by Founder, Acumen Brands",
+     scout:"Cade Collister",scoutTitle:"Founder · Acumen Brands",scoutImg:14,
+     vouch:"Lucia retains staff at twice the industry rate. Her team NPS scores are consistently top-decile. She is what a culture looks like."},
+  ];
+
+  const feedContent=(
+    <div className="fade-up">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-end",marginBottom:22}}>
+        <div>
+          <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:6}}>NWA Cohort · Active Pool</div>
+          <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?26:32,color:CR}}>Vetted Talent Feed</h2>
+        </div>
+        <div style={{fontSize:11,color:`${CR}55`}}>3 Scout-verified</div>
+      </div>
+      <div style={{display:"flex",flexDirection:"column",gap:14}}>
+        {talents.map(t=>(
+          <div key={t.id} className="card card-glow" style={{padding:mobile?18:22,transition:"all .2s"}}>
+            <div style={{display:"flex",gap:14,marginBottom:12}}>
+              <img src={`https://i.pravatar.cc/${mobile?44:52}?img=${t.img}`}
+                style={{width:mobile?44:52,height:mobile?44:52,borderRadius:"50%",border:`2px solid ${G}44`,flexShrink:0}} alt={t.name}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                  <div style={{minWidth:0}}>
+                    <div style={{fontSize:mobile?15:16,fontWeight:600,color:CR,marginBottom:2}}>{t.name}</div>
+                    <div style={{fontSize:11,color:`${CR}66`,marginBottom:2,whiteSpace:mobile?"nowrap":"normal",overflow:"hidden",textOverflow:"ellipsis"}}>{t.role}</div>
+                    <div style={{fontSize:10,color:`${CR}44`}}>📍 {t.location}</div>
+                  </div>
+                  <div className="tooltip-wrap" style={{textAlign:"right",cursor:"help",flexShrink:0}}>
+                    <div className="mono" style={{fontSize:mobile?26:30,color:G,lineHeight:1,textDecoration:"underline dotted",textUnderlineOffset:4}}>{t.score}</div>
+                    <div style={{fontSize:9,color:`${CR}44`,letterSpacing:".1em"}}>MATCH ⓘ</div>
+                    <div className="tooltip-box">
+                      <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:G,marginBottom:5}}>Score Breakdown</div>
+                      <div style={{color:CR,lineHeight:1.7}}>{t.breakdown}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div style={{background:`${G}0A`,border:`1px solid ${G}22`,borderRadius:9,padding:"12px 14px",marginBottom:10}}>
+              <div style={{display:"flex",gap:9,alignItems:"center",marginBottom:7}}>
+                <img src={`https://i.pravatar.cc/26?img=${t.scoutImg}`} style={{width:26,height:26,borderRadius:"50%",border:`1px solid ${G}44`}} alt={t.scout}/>
+                <div>
+                  <div style={{fontSize:11,color:GL,fontWeight:600}}>{t.scout}</div>
+                  <div style={{fontSize:9,color:`${CR}55`}}>{t.scoutTitle}</div>
+                </div>
+                <div style={{marginLeft:"auto",fontSize:9,color:G,background:`${G}15`,padding:"2px 7px",borderRadius:3,letterSpacing:".07em",flexShrink:0}}>SCOUT VOUCH</div>
+              </div>
+              <p style={{fontFamily:"Cormorant Garamond",fontSize:mobile?14:15,color:CR,lineHeight:1.6,fontStyle:"italic"}}>"{t.vouch}"</p>
+            </div>
+            <div style={{display:"flex",gap:7,marginBottom:12,flexWrap:"wrap"}}>
+              {t.traits.map(tr=>(
+                <span key={tr} style={{fontSize:10,color:G,background:`${G}15`,border:`1px solid ${G}33`,padding:"3px 9px",borderRadius:20,letterSpacing:".05em"}}>{tr}</span>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+              <button className="btn-gold" style={{padding:"9px 18px",borderRadius:7,flex:"1 1 auto",fontSize:11}}>Request Meeting →</button>
+              <button onClick={()=>setFollowed(f=>({...f,[t.id]:!f[t.id]}))} className="btn-ghost"
+                style={{padding:"9px 13px",borderRadius:7,flex:"0 0 auto",fontSize:10,
+                  background:followed[t.id]?`${G}15`:"transparent",borderColor:followed[t.id]?G:`${G}44`,
+                  color:followed[t.id]?G:`${CR}66`}}>
+                {followed[t.id]?"✓ Following Scout":"+ Follow Scout"}
+              </button>
+              <div style={{display:"flex",gap:2}}>
+                {[1,2,3,4,5].map(s=>(
+                  <span key={s} onClick={()=>setRatings(r=>({...r,[t.id]:s}))}
+                    style={{fontSize:16,cursor:"pointer",transition:"color .1s",color:(ratings[t.id]||0)>=s?G:`${CR}22`}}>★</span>
+                ))}
+              </div>
+              <span onClick={()=>setExpanded(expanded===t.id?null:t.id)}
+                style={{fontSize:10,color:`${CR}44`,cursor:"pointer",userSelect:"none"}}>
+                {expanded===t.id?"▲ hide history":"▼ work history"}
+              </span>
+            </div>
+            {expanded===t.id&&(
+              <div className="fade-up" style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${G}22`}}>
+                <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}44`,marginBottom:8}}>Work History</div>
+                {[{ti:"General Manager",co:"Outback Steakhouse, Houston TX",y:"2019–2024"},{ti:"Assistant Manager",co:"Darden Restaurants, Houston TX",y:"2016–2019"}].map(w=>(
+                  <div key={w.ti} style={{display:"flex",justifyContent:"space-between",fontSize:11,color:`${CR}66`,marginBottom:5,flexWrap:"wrap",gap:4}}>
+                    <span><span style={{color:CR,fontWeight:500}}>{w.ti}</span> · {w.co}</span>
+                    <span style={{color:`${CR}44`}}>{w.y}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const metricsContent=(
+    <div className="fade-up">
+      <div style={{marginBottom:22}}>
+        <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:G,marginBottom:6}}>Efficiency Dashboard</div>
+        <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?26:32,color:CR}}>Speed-to-Hire Analysis</h2>
+      </div>
+      {/* ── COMPARATIVE TIMELINE ── */}
+      <div className="card" style={{padding:24,marginBottom:18}}>
+        <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:20}}>The Lane vs. Traditional Hiring</div>
+        <svg viewBox="0 0 560 140" style={{width:"100%",height:"auto",overflow:"visible"}}>
+          <defs>
+            <linearGradient id="goldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={GD}/>
+              <stop offset="50%" stopColor={G}/>
+              <stop offset="100%" stopColor={GL}/>
+            </linearGradient>
+          </defs>
+          {/* Labels left */}
+          <text x="0" y="38"  fill={`${CR}88`} fontSize="11" fontFamily="DM Sans">Traditional</text>
+          <text x="0" y="108" fill={G}         fontSize="11" fontFamily="DM Sans">Next Lane</text>
+
+          {/* Traditional path — tangled gray */}
+          <path d="M100,30 C130,10 110,50 160,30 C200,15 190,55 240,30 C280,10 270,55 310,28 C350,5  340,55 380,28 C420,5  410,55 450,30 C480,18 470,42 520,30"
+            fill="none" stroke={`${CR}33`} strokeWidth="2.5" strokeLinecap="round"/>
+          {/* dashes marking struggle */}
+          <text x="524" y="34" fill={`${CR}55`} fontSize="10" fontFamily="DM Sans">52 days</text>
+
+          {/* Milestone markers on traditional */}
+          {[160,240,320,400].map((x,i)=>(
+            <circle key={i} cx={x} cy={[30,30,28,28][i]} r="4" fill={`${CR}22`} stroke={`${CR}44`} strokeWidth="1"/>
+          ))}
+
+          {/* Next Lane — straight gold lane */}
+          <line x1="100" y1="100" x2="516" y2="100" stroke={`${NAV}`} strokeWidth="8"/>
+          <line x1="100" y1="100" x2="516" y2="100"
+            stroke="url(#goldLine)" strokeWidth="3" strokeLinecap="round"
+            strokeDasharray="600" strokeDashoffset="600"
+            style={{animation:"laneDrawDesktop 1.8s ease forwards .4s"}}/>
+          {/* lane end arrow */}
+          <polygon points="516,94 530,100 516,106" fill={GL}/>
+          <text x="533" y="104" fill={G} fontSize="10" fontFamily="DM Sans">12 days</text>
+
+          {/* Start marker */}
+          <circle cx="100" cy="30"  r="5" fill={`${CR}44`}/>
+          <circle cx="100" cy="100" r="5" fill={G} style={{filter:`drop-shadow(0 0 4px ${G})`}}/>
+          <text x="70" y="68" fill={`${CR}44`} fontSize="9" fontFamily="DM Sans" textAnchor="middle">Start</text>
+          <line x1="70" x2="70" y1="72" y2="96" stroke={`${CR}22`} strokeWidth="1"/>
+
+          {/* Axis label */}
+          <text x="300" y="130" fill={`${CR}33`} fontSize="9" fontFamily="DM Sans" textAnchor="middle">Time →</text>
+        </svg>
+        <div style={{display:"flex",gap:20,marginTop:8,justifyContent:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{width:20,height:2,background:`${CR}33`}}/>
+            <span style={{fontSize:10,color:`${CR}55`}}>Traditional (52 days avg.)</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <div style={{width:20,height:2,background:`linear-gradient(90deg,${G},${GL})`}}/>
+            <span style={{fontSize:10,color:GL}}>Next Lane (12 days avg.)</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:mobile?"1fr":"1fr 1fr",gap:14,marginBottom:18}}>
+        {[
+          {l:"Avg. Time-to-Hire",  nl:"12 days",trad:"52 days",gain:"76% faster" },
+          {l:"Cost Per Hire",      nl:"$420",    trad:"$4,200+",gain:"10× cheaper"},
+          {l:"First-Year Retention",nl:"87%",    trad:"58%",    gain:"+29pts"     },
+          {l:"Hire Success Rate",  nl:"78%",     trad:"18%",    gain:"4× better"  },
+        ].map(m=>(
+          <div key={m.l} className="card" style={{padding:20}}>
+            <div style={{fontSize:10,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}55`,marginBottom:12}}>{m.l}</div>
+            <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+              <div>
+                <div style={{fontSize:9,color:`${CR}44`,marginBottom:2}}>Next Lane</div>
+                <div className="mono" style={{fontSize:26,color:G,lineHeight:1}}>{m.nl}</div>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:9,color:`${CR}44`,marginBottom:2}}>Traditional</div>
+                <div className="mono" style={{fontSize:26,color:`${CR}44`,lineHeight:1,textDecoration:"line-through"}}>{m.trad}</div>
+              </div>
+            </div>
+            <div style={{background:`${G}15`,border:`1px solid ${G}33`,borderRadius:5,padding:"5px 10px",textAlign:"center",fontSize:11,color:G,fontWeight:600}}>{m.gain} efficiency gain</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card" style={{padding:22}}>
+        <div style={{fontSize:10,letterSpacing:".14em",textTransform:"uppercase",color:G,marginBottom:16}}>NWA Pilot — Pipeline</div>
+        <div style={{display:"flex",gap:0,alignItems:"center"}}>
+          {[{l:"Scouts",v:12,c:G},{l:"Nominated",v:34,c:GL},{l:"Active",v:28,c:"#A8C5E8"},{l:"Interviews",v:9,c:"#7FB3D3"},{l:"Hired",v:7,c:"#4CAF50"}].map((s,i,arr)=>(
+            <div key={s.l} style={{flex:1}}>
+              <div style={{textAlign:"center",paddingBottom:7}}>
+                <div className="mono" style={{fontSize:22,color:s.c}}>{s.v}</div>
+                <div style={{fontSize:9,color:`${CR}55`,lineHeight:1.3}}>{s.l}</div>
+              </div>
+              <div style={{height:3,background:s.c,opacity:.75,borderRadius:i===0?"3px 0 0 3px":i===arr.length-1?"0 3px 3px 0":0}}/>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if(mobile){
+    return(
+      <div style={{height:"100%",display:"flex",flexDirection:"column",background:NAV,backgroundImage:"url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E\")"}}>
+        <div style={{display:"flex",borderBottom:`1px solid ${G}11`,flexShrink:0}}>
+          {[{id:"loading",l:"Feed"},{id:"metrics",l:"Metrics"}].map(t=>(
+            <button key={t.id} onClick={()=>setTab(t.id==="loading"?"loading":"metrics")}
+              style={{flex:1,padding:"10px 4px",border:"none",cursor:"pointer",fontFamily:"DM Sans",
+                fontSize:10,fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",
+                background:(tab==="loading"||tab==="feed")&&t.id==="loading"?`${G}18`:tab==="metrics"&&t.id==="metrics"?`${G}18`:"transparent",
+                color:(tab==="loading"||tab==="feed")&&t.id==="loading"?G:tab==="metrics"&&t.id==="metrics"?G:`${CR}55`,
+                borderBottom:(tab==="loading"||tab==="feed")&&t.id==="loading"?`2px solid ${G}`:tab==="metrics"&&t.id==="metrics"?`2px solid ${G}`:"2px solid transparent",
+                transition:"all .2s"}}>
+              {t.l}
+            </button>
+          ))}
+        </div>
+        <div className="scroll-y" style={{flex:1,padding:16}}>
+          {tab==="loading"&&<SkeletonFeed/>}
+          {tab==="feed"&&feedContent}
+          {tab==="metrics"&&metricsContent}
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{display:"flex",height:"calc(100vh - 58px)",overflow:"hidden"}}>
+      <div style={{width:200,background:NM,borderRight:`1px solid ${G}22`,padding:"32px 0",flexShrink:0}}>
+        <div style={{padding:"0 20px 22px",borderBottom:`1px solid ${G}11`}}>
+          <div style={{fontSize:10,letterSpacing:".14em",color:`${CR}55`,textTransform:"uppercase",marginBottom:4}}>Recruiter Portal</div>
+          <div style={{fontFamily:"Cormorant Garamond",fontSize:16,color:CR}}>Talent Acquisition</div>
+        </div>
+        {[{id:"loading",l:"Vetted Talent Feed"},{id:"metrics",l:"Efficiency Metrics"}].map(t=>(
+          <div key={t.id} onClick={()=>setTab(t.id==="loading"?"loading":"metrics")}
+            style={{padding:"11px 20px",cursor:"pointer",
+              borderLeft:(tab==="loading"||tab==="feed")&&t.id==="loading"?`2px solid ${G}`:tab==="metrics"&&t.id==="metrics"?`2px solid ${G}`:"2px solid transparent",
+              background:(tab==="loading"||tab==="feed")&&t.id==="loading"?`${G}11`:tab==="metrics"&&t.id==="metrics"?`${G}11`:"transparent",
+              fontSize:12,fontWeight:600,color:(tab==="loading"||tab==="feed")&&t.id==="loading"?CR:tab==="metrics"&&t.id==="metrics"?CR:`${CR}55`,
+              transition:"all .2s"}}>
+            {t.l}
+          </div>
+        ))}
+        <div style={{marginTop:"auto",padding:"16px 20px",borderTop:`1px solid ${G}11`}}>
+          <div style={{fontSize:9,color:`${CR}33`,lineHeight:1.6}}>NWA Pilot<br/>Month 1 · Foundation Gate</div>
+        </div>
+      </div>
+      <div className="scroll-y" style={{flex:1,padding:36}}>
+        {tab==="loading"&&<SkeletonFeed/>}
+        {tab==="feed"&&feedContent}
+        {tab==="metrics"&&metricsContent}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════ ROOT ══════════════ */
+function App(){
+  const [view,setView]=useState("talent");
+  const [mobile,setMobile]=useState(false);
+  const [error,setError]=useState(null);
+
+  // simulate random network error demo
+  useEffect(()=>{
+    const t=setTimeout(()=>setError("We've hit a temporary roadblock in the lane. We're working to clear the path — stay with us."),8000);
+    return()=>clearTimeout(t);
+  },[]);
+
+  const content=(
+    <>
+      {view==="talent"    && <TalentFlow    mobile={mobile}/>}
+      {view==="scout"     && <ScoutFlow     mobile={mobile}/>}
+      {view==="recruiter" && <RecruiterFlow mobile={mobile}/>}
+    </>
+  );
+
+  return(
+    <div style={{display:"flex",flexDirection:"column",height:"100vh"}}>
+      <TopNav view={view} setView={setView} mobile={mobile} setMobile={setMobile}/>
+      {mobile?(
+        <MobileFrame>{content}</MobileFrame>
+      ):(
+        <div style={{flex:1,overflow:"hidden"}}>{content}</div>
+      )}
+      {error&&<ErrorToast msg={error} onClose={()=>setError(null)}/>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
