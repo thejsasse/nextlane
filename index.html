@@ -204,7 +204,7 @@ function MobileFrame({children}){
 /* ══════════════════════════════════════════════
    QR UNBOXING SEQUENCE
 ══════════════════════════════════════════════ */
-function QRUnboxFlow({mobile,setView}){
+function QRUnboxFlow({mobile,setView,setTalentStartStep}){
   const [phase,setPhase]=useState(()=>{
     const params=new URLSearchParams(window.location.search);
     const id=params.get("id");
@@ -325,7 +325,24 @@ function QRUnboxFlow({mobile,setView}){
               <div className="mono" style={{fontSize:9,color:`${G}88`,marginTop:2}}>NL-NWA-2025-0047</div>
             </div>
           </div>
-          <button className="btn-gold" onClick={()=>setView("talent")} style={{padding:"14px 0",borderRadius:12,fontSize:12,width:"100%",boxShadow:`0 6px 24px ${G}44`}}>Accept My Golden Ticket →</button>
+          <button className="btn-gold" onClick={()=>{
+            // Haptic + prestige audio
+            if(navigator.vibrate)navigator.vibrate([30,50,120,30,200]);
+            try{
+              const ctx=new(window.AudioContext||window.webkitAudioContext)();
+              const play=(freq,start,dur,gain=0.18)=>{
+                const o=ctx.createOscillator();const g=ctx.createGain();
+                o.connect(g);g.connect(ctx.destination);
+                o.frequency.value=freq;o.type="sine";
+                g.gain.setValueAtTime(0,ctx.currentTime+start);
+                g.gain.linearRampToValueAtTime(gain,ctx.currentTime+start+0.02);
+                g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+start+dur);
+                o.start(ctx.currentTime+start);o.stop(ctx.currentTime+start+dur+0.05);
+              };
+              play(880,0,0.15,0.12);play(1108,0.12,0.15,0.10);play(1318,0.24,0.3,0.14);play(1760,0.36,0.5,0.16);
+            }catch(e){}
+            if(setTalentStartStep)setTalentStartStep(1);setView("talent");
+          }} style={{padding:"14px 0",borderRadius:12,fontSize:12,width:"100%",boxShadow:`0 6px 24px ${G}44`}}>Accept My Golden Ticket →</button>
           <button className="btn-ghost" onClick={()=>setPhase("scan")} style={{padding:"10px 0",borderRadius:12,fontSize:11,width:"100%",marginTop:8}}>↺ Replay Unboxing</button>
         </div>
       )}
@@ -879,9 +896,11 @@ const NWA_STORIES=["Recognized at The 1907 in Rogers — now Operations Lead at 
 const TALENTS=[
   {id:1,name:"Maria Gutierrez",role:"Restaurant GM → Operations Leader",location:"Bentonville, AR",
    traits:["Coachability","Emotional Intelligence"],score:97,img:21,
+   scoutLevel:"SVP",wageFrom:38,wageTo:70,
    breakdown:"90% Coachability + 95% EQ · Vouched by SVP at Walmart",
    radar:{coachability:90,eq:95,motivation:72,temperament:84},
    scout:"James Whitfield",scoutTitle:"SVP Operations · Walmart",scoutImg:12,redacted:false,
+   traitReasons:{coachability:"James noted Maria absorbed feedback mid-shift and acted on it before the meeting ended. She overhauled her entire team onboarding within a week.",eq:"James scored EQ 95% after watching her turn around a 40-person team in 90 days — zero attrition, highest NPS in the district.",motivation:"She asked for more responsibility in her first week — and delivered before being asked twice.",temperament:"Maria managed the Sam's Club remodel with 0% staff turnover. James said she was the calmest person in the building every single day."},
    timeline:[
      {title:"General Manager",company:"Outback Steakhouse, Houston TX",year:"2019–2024",trait:"High EQ",note:"Defused a $180k staffing crisis without a single termination"},
      {title:"Assistant Manager",company:"Darden Restaurants, Houston TX",year:"2016–2019",trait:"Coachability",note:"Promoted twice in 18 months after adopting new ops system in week one"},
@@ -890,9 +909,11 @@ const TALENTS=[
    vouch:"Maria leads with quiet authority. She turns first-time staff into loyal, high-performing teams. The room changes when she walks in."},
   {id:2,name:"DeShawn Okafor",role:"Warehouse Supervisor → Supply Chain Mgr",location:"Rogers, AR",
    traits:["Motivation","Temperament"],score:94,img:22,
+   scoutLevel:"Tech Founder",wageFrom:45,wageTo:82,
    breakdown:"88% Motivation + 96% Temperament · Vouched by Apple Product Lead",
    radar:{coachability:78,eq:82,motivation:96,temperament:94},
    scout:"Aric Marshall",scoutTitle:"Product Marketing · Apple",scoutImg:13,redacted:true,
+   traitReasons:{coachability:"Aric noted DeShawn adapted a new WMS in his second week — no training required.",eq:"High empathy under pressure — his team NPS was double the district average.",motivation:"Solved a $2M inventory discrepancy in his third week. He doesn't need managing — he needs a bigger stage.",temperament:"Led a 90-day facility transition with zero attrition. Maintained composure through a full remodel."},
    timeline:[
      {title:"Warehouse Supervisor",company:"Tyson Foods, Rogers AR",year:"2020–2024",trait:"Motivation",note:"Resolved a $2M inventory discrepancy in his third week on the job"},
      {title:"Logistics Coord.",company:"FedEx Ground, Fayetteville AR",year:"2017–2020",trait:"Temperament",note:"Led team through a 90-day facility transition with zero attrition"},
@@ -900,9 +921,11 @@ const TALENTS=[
    vouch:"DeShawn has an extraordinary systems mind. He solved a $2M inventory problem in his third week. He just needs the right stage."},
   {id:3,name:"Lucia Fernández",role:"Shift Lead → District Manager",location:"Fayetteville, AR",
    traits:["Emotional Intelligence","Temperament"],score:91,img:23,
+   scoutLevel:"Founder",wageFrom:32,wageTo:58,
    breakdown:"93% EQ + 89% Temperament · Vouched by Founder, Acumen Brands",
    radar:{coachability:85,eq:93,motivation:80,temperament:89},
    scout:"Cade Collister",scoutTitle:"Founder · Acumen Brands",scoutImg:14,redacted:false,
+   traitReasons:{coachability:"Cade noted Lucia adapted to a full menu overhaul in 72 hours without a single complaint.",eq:"Her team's trust scores are twice the regional average — Cade called it the highest he'd seen in 15 years.",motivation:"She asked for stretch projects in every review. District Manager is the minimum she should be aiming for.",temperament:"Maintained 0% attrition through the full Sam's Club remodel. The calmest person in any room."},
    timeline:[
      {title:"Shift Lead",company:"Walmart Supercenter #2435, Rogers AR",year:"2019–2024",trait:"High EQ",note:"Achieved highest team NPS score in the district — two years running"},
      {title:"Team Lead",company:"Sam's Club, Bentonville AR",year:"2016–2019",trait:"Temperament",note:"Maintained 0% attrition through a full store remodel"},
@@ -920,8 +943,23 @@ function RecruiterFlow({mobile}){
   const [compareTargets,setCompareTargets]=useState([]); // up to 2 talent ids
   const [showCompare,setShowCompare]=useState(false);
   const [privacyShieldActive,setPrivacyShieldActive]=useState(true);
-  const [highlightTrait,setHighlightTrait]=useState({}); // {talentId: traitKey}
+  const [highlightTrait,setHighlightTrait]=useState({});
+  const [pedigreeFilter,setPedigreeFilter]=useState("all"); // all | svp | founder | tech
   const vouchRefs=useRef({});
+
+  const PEDIGREE_OPTIONS=[
+    {id:"all",label:"All Scouts"},
+    {id:"svp",label:"SVP Level"},
+    {id:"founder",label:"Founders"},
+    {id:"tech",label:"Tech Leaders"},
+  ];
+  const filteredTalents=TALENTS.filter(t=>{
+    if(pedigreeFilter==="all")return true;
+    if(pedigreeFilter==="svp")return t.scoutLevel==="SVP";
+    if(pedigreeFilter==="founder")return t.scoutLevel==="Founder"||t.scoutLevel==="Tech Founder";
+    if(pedigreeFilter==="tech")return t.scoutLevel==="Tech Founder";
+    return true;
+  });
 
   const toggleCompare=id=>setCompareTargets(prev=>{
     if(prev.includes(id))return prev.filter(x=>x!==id);
@@ -977,16 +1015,40 @@ function RecruiterFlow({mobile}){
           {privacyShieldActive?"Shield: On":"Shield: Off"}
         </button>
       </div>
+
+      {/* Pedigree Filter */}
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:9,letterSpacing:".1em",textTransform:"uppercase",color:`${CR}44`,marginBottom:7}}>Filter by Scout Pedigree</div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+          {PEDIGREE_OPTIONS.map(o=>(
+            <button key={o.id} onClick={()=>setPedigreeFilter(o.id)}
+              style={{padding:"5px 12px",borderRadius:20,border:`1px solid ${pedigreeFilter===o.id?G:G+"33"}`,
+                background:pedigreeFilter===o.id?`${G}18`:"transparent",
+                color:pedigreeFilter===o.id?GL:`${CR}55`,fontSize:10,cursor:"pointer",transition:"all .15s",fontFamily:"DM Sans"}}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Longevity Forecast Banner */}
+      <div style={{background:`linear-gradient(135deg,rgba(76,175,80,.08),rgba(76,175,80,.04))`,border:`1px solid rgba(76,175,80,.28)`,borderRadius:9,padding:"10px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:16,flexShrink:0}}>📈</span>
+        <div style={{fontSize:11,color:"#8BC88A",lineHeight:1.55}}>
+          <span style={{color:"#4CAF50",fontWeight:600}}>Longevity Forecast:</span> NextLane talent stays in roles <span style={{color:"#4CAF50",fontWeight:600}}>40% longer</span> than traditional hires — because Scout vetting creates alignment before day one.
+        </div>
+      </div>
+
       {!privacyShieldActive&&(
         <div className="fade-in" style={{background:"rgba(106,175,221,.08)",border:"1px solid rgba(106,175,221,.28)",borderRadius:9,padding:"9px 14px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
           <span style={{fontSize:11}}>🔓</span>
           <div style={{fontSize:11,color:"#8BC4E8",lineHeight:1.5}}>Privacy Shield off — all profiles fully visible. Toggle on to simulate a <span style={{color:"#6AAFDD",fontWeight:600}}>Stealth</span> candidate experience.</div>
         </div>
       )}
-      <div style={{fontSize:11,color:`${CR}55`,marginBottom:14}}>3 Scout-verified</div>
+      <div style={{fontSize:11,color:`${CR}55`,marginBottom:14}}>{filteredTalents.length} Scout-verified{pedigreeFilter!=="all"?` · ${PEDIGREE_OPTIONS.find(o=>o.id===pedigreeFilter)?.label} filter active`:""}</div>
 
       <div style={{display:"flex",flexDirection:"column",gap:14}}>
-        {TALENTS.map(t=>(
+        {filteredTalents.map(t=>(
           <PrivacyShield key={t.id} name={t.name} company="Tyson Foods" redacted={privacyShieldActive&&t.redacted}>
             <div className="card card-glow" style={{padding:mobile?16:22,transition:"all .2s"}}>
               {/* top row */}
@@ -1069,14 +1131,7 @@ function RecruiterFlow({mobile}){
                   <div style={{flex:1}}>
                     <div style={{fontSize:10,letterSpacing:".12em",textTransform:"uppercase",color:GHV,marginBottom:10}}>Character Fingerprint</div>
                     {Object.entries(t.radar).map(([k,v])=>{
-                      const traitQuotes={
-                        coachability:{1:"She absorbs feedback in real-time and acts on it before the meeting ends.",2:"Promoted twice in 18 months after adopting a new ops system in week one.",3:"She adapted to a full menu overhaul in 72 hours without a single complaint."},
-                        eq:{1:"She turns around culture in 90 days, retains staff others can't keep. — "+t.scout,2:"Achieved highest team NPS in the district — two years running. — "+t.scout,3:"Her team's trust scores are twice the regional average. — "+t.scout},
-                        motivation:{1:"He solved a $2M inventory problem in his third week. — "+t.scout,2:"He doesn't need managing — he needs a bigger stage. — "+t.scout,3:"She asked for more responsibility on day one. — "+t.scout},
-                        temperament:{1:"Led a 90-day facility transition with zero attrition. — "+t.scout,2:"Maintained composure through a full store remodel, 0% turnover. — "+t.scout,3:"The calmest person in any room, regardless of the pressure. — "+t.scout},
-                      };
-                      const quotePool=traitQuotes[k]||{};
-                      const quoteText=quotePool[t.id]||quotePool[1]||t.vouch.substring(0,80)+"… — "+t.scout;
+                      const quoteText=(t.traitReasons&&t.traitReasons[k])||t.vouch.substring(0,80)+"… — "+t.scout;
                       const labelMap={eq:"Emotional Intelligence"};
                       const isHighlighted=highlightTrait[t.id]===k;
                       return(
@@ -1088,9 +1143,7 @@ function RecruiterFlow({mobile}){
                               onClick={()=>{
                                 setHighlightTrait(h=>({...h,[t.id]:k}));
                                 setTimeout(()=>setHighlightTrait(h=>({...h,[t.id]:null})),2200);
-                                if(vouchRefs.current[t.id]){
-                                  vouchRefs.current[t.id].scrollIntoView({behavior:"smooth",block:"nearest"});
-                                }
+                                if(vouchRefs.current[t.id]){vouchRefs.current[t.id].scrollIntoView({behavior:"smooth",block:"nearest"});}
                               }}
                               style={{fontSize:10,color:isHighlighted?GL:`${CR}77`,textTransform:"capitalize",cursor:"pointer",textDecoration:"underline dotted",textUnderlineOffset:2,transition:"color .2s",fontWeight:isHighlighted?600:400}}>
                               {labelMap[k]||k.charAt(0).toUpperCase()+k.slice(1)}
@@ -1098,7 +1151,7 @@ function RecruiterFlow({mobile}){
                             <span className="mono" style={{fontSize:10,color:isHighlighted?GL:G,transition:"color .2s"}}>{v}%</span>
                           </div>
                           <div style={{height:3,background:NL,borderRadius:2,overflow:"hidden"}}>
-                            <div style={{width:`${v}%`,height:"100%",background:isHighlighted?`linear-gradient(90deg,${G},${GL},#fff)` :`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"background .3s, width .8s ease"}}/>
+                            <div style={{width:`${v}%`,height:"100%",background:isHighlighted?`linear-gradient(90deg,${G},${GL},#fff)`:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:2,transition:"background .3s, width .8s ease"}}/>
                           </div>
                           <div className="trait-tt" style={{display:"none",position:"absolute",bottom:"calc(100% + 6px)",left:0,right:0,background:`rgba(18,32,64,.97)`,border:`1px solid ${G}44`,borderRadius:9,padding:"10px 12px",fontSize:11,color:CR,lineHeight:1.6,zIndex:20,whiteSpace:"normal",pointerEvents:"none"}}>
                             <div style={{fontSize:9,color:`${CR}44`,marginBottom:3}}>Click to highlight evidence in vouch ↓</div>
@@ -1409,6 +1462,31 @@ function ScoutFlow({mobile}){
 
             {vouchMode==="type"?(
               <>
+                {/* Smart Suggestions — starter sentences when traits selected */}
+                {selTraits.length>0&&vouch.length===0&&(
+                  <div className="fade-up" style={{marginBottom:10}}>
+                    <div style={{fontSize:9,color:GHV,letterSpacing:".1em",textTransform:"uppercase",marginBottom:7}}>✦ AI Starter — click to use</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {selTraits.map(trait=>{
+                        const starters={
+                          "Coachability":`I am nominating [Name] because their ability to absorb feedback and implement it immediately is something I've rarely seen in ${Math.floor(Math.random()*15)+10} years of leadership. In one specific instance, they…`,
+                          "Emotional Intelligence":`I am nominating [Name] because their emotional intelligence is a direct revenue driver — they retain staff others can't keep, and the room changes when they walk in.`,
+                          "Motivation":`I am nominating [Name] because their drive to [action] is extraordinary. They don't wait to be asked. Within their first weeks, they…`,
+                          "Temperament":`I am nominating [Name] because under the kind of sustained pressure that breaks most people — they stay calm, think clearly, and bring out the best in everyone around them.`,
+                        };
+                        return(
+                          <div key={trait} onClick={()=>setVouch(starters[trait]||"")}
+                            style={{background:`${G}08`,border:`1px solid ${G}33`,borderRadius:8,padding:"9px 12px",cursor:"pointer",transition:"background .15s"}}
+                            onMouseEnter={e=>e.currentTarget.style.background=`${G}18`}
+                            onMouseLeave={e=>e.currentTarget.style.background=`${G}08`}>
+                            <div style={{fontSize:9,color:GHV,marginBottom:3,letterSpacing:".07em",textTransform:"uppercase"}}>{trait}</div>
+                            <div style={{fontSize:10,color:CR_AA,lineHeight:1.6,fontStyle:"italic"}}>"{(starters[trait]||"").substring(0,90)}…"</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
                 <div style={{display:"flex",justifyContent:"flex-end",marginBottom:6}}>
                   <span style={{fontSize:10,color:vouch.length>=250?GHV:`${CR}44`,transition:"color .3s"}}><span className="mono">{vouch.length}</span> / 250 min</span>
                 </div>
@@ -1445,13 +1523,31 @@ function ScoutFlow({mobile}){
         <h2 style={{fontFamily:"Cormorant Garamond",fontSize:mobile?26:30,color:CR}}>Your Impact Dashboard</h2>
       </div>
       <div style={{display:"grid",gridTemplateColumns:mobile?"repeat(2,1fr)":"repeat(4,1fr)",gap:12,marginBottom:18}}>
-        {[{l:"Lives Changed",v:"7",i:"✨"},{l:"Active Nominations",v:"3",i:"📋"},{l:"Codes Remaining",v:"2",i:"🎫"},{l:"Pending Earned",v:"1",i:"⏳"}].map(s=>(
+        {[{l:"Lives Changed",v:"7",i:"✨"},{l:"Active Nominations",v:"3",i:"📋"},{l:"Pending Earned",v:"1",i:"⏳"}].map(s=>(
           <div key={s.l} className="card card-glow" style={{padding:"16px 12px",textAlign:"center",transition:"all .2s"}}>
             <div style={{fontSize:20,marginBottom:6}}>{s.i}</div>
             <div className="mono" style={{fontSize:28,color:G,fontWeight:700,lineHeight:1}}>{s.v}</div>
             <div style={{fontSize:10,color:`${CR}66`,marginTop:3}}>{s.l}</div>
           </div>
         ))}
+        {/* Codes Remaining — Fuel Gauge */}
+        <div className="card card-glow" style={{padding:"14px 12px",textAlign:"center",border:`1px solid ${G}55`,position:"relative",overflow:"hidden"}}>
+          <div style={{fontSize:9,letterSpacing:".1em",textTransform:"uppercase",color:GHV,marginBottom:8}}>Codes Remaining</div>
+          {/* Gauge */}
+          <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:5,height:36,marginBottom:8}}>
+            {[5,4,3,2,1].map(n=>{
+              const filled=n<=2;
+              return(
+                <div key={n} style={{width:mobile?10:14,borderRadius:3,transition:"all .3s",
+                  height:`${12+n*5}px`,
+                  background:filled?`linear-gradient(180deg,${GL},${G})`:`${NL}`,
+                  border:`1px solid ${filled?G:G+"33"}`}}/>
+              );
+            })}
+          </div>
+          <div className="mono" style={{fontSize:26,color:G,fontWeight:700,lineHeight:1}}>2</div>
+          <div style={{fontSize:9,color:`${CR}55`,marginTop:3}}>of 5 active</div>
+        </div>
       </div>
       <div className="card" style={{padding:20,marginBottom:14}}>
         <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:GHV,marginBottom:4}}>Code Inventory</div>
@@ -1640,10 +1736,19 @@ function AICopilotToast({screen,visible,onDismiss}){
 const TSTEPS=["landing","welcome","passion","growth","aspiration","character","dashboard"];
 const TLBLS=["Landing","Welcome","Passion","Growth","Aspiration","Character","Dashboard"];
 
-function TalentFlow({mobile}){
-  const [step,setStep]=useState(0);
+function TalentFlow({mobile,initialStep=0,personaName="Maria"}){
+  // localStorage persistence for demo safety
+  const LS_STEP="nl_talent_step";
+  const LS_ANS="nl_talent_ans";
+
+  const [step,setStep]=useState(()=>{
+    if(initialStep>0)return initialStep; // QR Accept overrides
+    try{const s=localStorage.getItem(LS_STEP);return s?parseInt(s,10):0;}catch{return 0;}
+  });
   const [dir,setDir]=useState("right");
-  const [ans,setAns]=useState({passion:"",growth:"",aspiration:""});
+  const [ans,setAns]=useState(()=>{
+    try{const a=localStorage.getItem(LS_ANS);return a?JSON.parse(a):{passion:"",growth:"",aspiration:""};}catch{return{passion:"",growth:"",aspiration:""};}
+  });
   const [showQuote,setShowQuote]=useState(false);
   const [animKey,setAnimKey]=useState(0);
   const [copilotVisible,setCopilotVisible]=useState(false);
@@ -1652,6 +1757,10 @@ function TalentFlow({mobile}){
   const tilt=useTilt(tiltRef);
 
   const cur=TSTEPS[step];
+
+  // Persist step + answers to localStorage
+  useEffect(()=>{try{localStorage.setItem(LS_STEP,step);}catch{}},[ step]);
+  useEffect(()=>{try{localStorage.setItem(LS_ANS,JSON.stringify(ans));}catch{}},[ans]);
 
   // Start/reset the 10s AI co-pilot timer whenever we're on a writing screen
   useEffect(()=>{
@@ -1668,6 +1777,11 @@ function TalentFlow({mobile}){
   const next=()=>go(Math.min(step+1,TSTEPS.length-1));
   const prev=()=>go(Math.max(step-1,0));
   const cls=dir==="right"?"slide-right":"slide-left";
+
+  // If we started at Welcome via QR accept, trigger the quote animation
+  useEffect(()=>{
+    if(initialStep===1&&cur==="welcome"){setShowQuote(false);setTimeout(()=>setShowQuote(true),1600);}
+  },[]);
 
   const traits=[{key:"Coachability",icon:"🧠",desc:"Adapts fast, listens deeply",active:true},{key:"Emotional Intelligence",icon:"💡",desc:"Reads rooms, builds loyalty",active:true},{key:"Motivation",icon:"🔥",desc:"Driven to outperform",active:false},{key:"Temperament",icon:"⚖️",desc:"Steady under pressure",active:false}];
 
@@ -1987,9 +2101,62 @@ function TalentScreenContent({cur,animKey,cls,ans,setAns,showQuote,traits,next,p
           </div>
         </div>
       </div>
+
+      {/* Preparing for the Lane — micro-path */}
+      <PreparingModule mobile={mobile}/>
     </div>
   );
   return null;
+}
+
+/* ══════════════════════════════════════════════
+   PREPARING FOR THE LANE — Post-Dashboard Module
+══════════════════════════════════════════════ */
+const MICRO_TIPS=[
+  {trait:"EQ",stat:"3 recruiters are looking at profiles with high EQ today.",tip:"Conflict resolution tip: Lead with curiosity, not correction. Say 'Help me understand what happened' before 'Here's what we need to fix.' This language de-escalates in under 60 seconds.",icon:"💡",cta:"Practice this phrase"},
+  {trait:"Coachability",stat:"Companies hiring for Coachability grew 42% in NWA last quarter.",tip:"Frame adaptability with evidence: 'When the menu changed overnight, I re-trained 14 staff in 48 hours — and we hit our targets by Friday.' Specificity earns credibility.",icon:"🧠",cta:"Build your answer"},
+  {trait:"Temperament",stat:"Calm leaders retain staff 40% longer than reactive ones.",tip:"Under-pressure story structure: Situation → Stakes → What you did → What the team felt. 90 seconds max. Practice it until it sounds natural, not rehearsed.",icon:"⚖️",cta:"Refine your story"},
+];
+
+function PreparingModule({mobile}){
+  const [tipIdx,setTipIdx]=useState(0);
+  const [expanded,setExpanded]=useState(false);
+  const tip=MICRO_TIPS[tipIdx];
+  return(
+    <div style={{marginTop:14}}>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+        <div style={{width:6,height:6,borderRadius:"50%",background:G,boxShadow:`0 0 6px ${G}`,animation:"typingPulse 2s ease infinite"}}/>
+        <div style={{fontSize:9,letterSpacing:".14em",textTransform:"uppercase",color:GHV}}>Preparing for the Lane</div>
+      </div>
+      <div className="card" style={{padding:mobile?14:18,border:`1px solid ${G}33`}}>
+        <div style={{display:"flex",alignItems:"flex-start",gap:12}}>
+          <div style={{width:36,height:36,background:`${G}15`,border:`1px solid ${G}33`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{tip.icon}</div>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
+              <span style={{fontSize:9,color:GHV,letterSpacing:".08em",textTransform:"uppercase",background:`${G}15`,padding:"1px 6px",borderRadius:3}}>{tip.trait}</span>
+              <span style={{fontSize:10,color:`${CR}55`}}>60-second tip</span>
+            </div>
+            <div style={{fontSize:11,color:CR_AA,lineHeight:1.6,marginBottom:8}}><span style={{color:GL,fontWeight:500}}>{tip.stat}</span></div>
+            {expanded&&(
+              <div className="fade-up" style={{fontSize:11,color:CR,lineHeight:1.7,marginBottom:10,fontFamily:"Cormorant Garamond",fontSize:mobile?14:15,fontStyle:"italic"}}>
+                "{tip.tip}"
+              </div>
+            )}
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button onClick={()=>setExpanded(e=>!e)}
+                style={{padding:"6px 12px",borderRadius:7,border:`1px solid ${G}44`,background:`${G}10`,color:G,fontSize:10,cursor:"pointer",fontFamily:"DM Sans"}}>
+                {expanded?"Hide tip ▲":`${tip.cta} →`}
+              </button>
+              <button onClick={()=>{setTipIdx(i=>(i+1)%MICRO_TIPS.length);setExpanded(false);}}
+                style={{padding:"6px 12px",borderRadius:7,border:`1px solid ${G}22`,background:"transparent",color:`${CR}55`,fontSize:10,cursor:"pointer",fontFamily:"DM Sans"}}>
+                Next tip →
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ══════════════════════════════════════════════
@@ -2291,7 +2458,19 @@ function AnalyticsView({mobile}){
    ROOT
 ══════════════════════════════════════════════ */
 function App(){
-  const [view,setView]=useState("qr");
+  const [view,setView]=useState(()=>{
+    const p=new URLSearchParams(window.location.search);
+    const v=p.get("view");
+    if(v==="scout")return"scout";
+    if(v==="talent")return"talent";
+    if(v==="recruiter")return"recruiter";
+    return"qr";
+  });
+  const [talentStartStep,setTalentStartStep]=useState(0);
+  const [talentPersonaName,setTalentPersonaName]=useState(()=>{
+    const p=new URLSearchParams(window.location.search);
+    return p.get("name")||"Maria";
+  });
   const [mobile,setMobile]=useState(()=>window.innerWidth<=768);
   const [error,setError]=useState(null);
 
@@ -2308,8 +2487,8 @@ function App(){
 
   const content=(
     <>
-      {view==="qr"        && <QRUnboxFlow   mobile={mobile} setView={setView}/>}
-      {view==="talent"    && <TalentFlow    mobile={mobile}/>}
+      {view==="qr"        && <QRUnboxFlow   mobile={mobile} setView={setView} setTalentStartStep={setTalentStartStep}/>}
+      {view==="talent"    && <TalentFlow    mobile={mobile} initialStep={talentStartStep} personaName={talentPersonaName}/>}
       {view==="scout"     && <ScoutFlow     mobile={mobile}/>}
       {view==="recruiter" && <RecruiterFlow mobile={mobile}/>}
       {view==="card"      && <PhysicalCard  mobile={mobile}/>}
@@ -2388,7 +2567,7 @@ function AdminDashboard({mobile}){
           <div style={{marginLeft:"auto",fontSize:9,color:`${CR}33`}}>Triple-click logo to exit</div>
         </div>
         <div style={{display:"flex",gap:0,overflowX:"auto"}}>
-          {[{id:"overview",l:"Overview"},{id:"funnel",l:"Conversion Funnel"},{id:"engagement",l:"Scout Engagement"},{id:"demand",l:"Market Demand"}].map(t=>(
+          {[{id:"overview",l:"Overview"},{id:"funnel",l:"Conversion Funnel"},{id:"engagement",l:"Scout Engagement"},{id:"demand",l:"Market Demand"},{id:"economy",l:"💰 Economic Engine"}].map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{padding:mobile?"8px 12px":"9px 18px",border:"none",cursor:"pointer",fontFamily:"DM Sans",fontSize:10,fontWeight:500,letterSpacing:".06em",textTransform:"uppercase",
                 background:tab===t.id?"#E8555518":"transparent",
@@ -2559,6 +2738,78 @@ function AdminDashboard({mobile}){
               <div style={{fontSize:9,color:GHV,letterSpacing:".12em",textTransform:"uppercase",marginBottom:8}}>Investor Narrative</div>
               <div style={{fontSize:12,color:CR_AA,lineHeight:1.75}}>
                 In Month 1, NextLane generated <span style={{color:GL}}>14 meeting requests</span> across 3 talent profiles from 89 recruiter feed views — a <span style={{color:GL}}>15.7% demand conversion rate</span>. Traditional job boards average 0.8%. With a $1,000 placement fee and 86% offer-accept rate, the pipeline projects <span style={{color:GL}}>$6,000 in Month 1 GMV</span> from a 12-scout cohort.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {tab==="economy"&&(
+          <div className="fade-up">
+            <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?22:28,color:CR,marginBottom:4}}>NWA Economic Engine</div>
+            <div style={{fontSize:11,color:`${CR}44`,marginBottom:22}}>Projected wage impact generated this month · Founder view</div>
+
+            {/* Total impact hero */}
+            <div style={{background:`linear-gradient(135deg,${NM},${NL})`,border:`1px solid ${G}55`,borderRadius:14,padding:mobile?18:26,marginBottom:18,textAlign:"center",boxShadow:`0 8px 32px rgba(0,0,0,.3),0 0 40px ${G}11`}}>
+              <div style={{fontSize:10,letterSpacing:".18em",textTransform:"uppercase",color:GHV,marginBottom:10}}>Total Projected Wage Increase · Month 1</div>
+              <div className="mono" style={{fontSize:mobile?38:54,color:G,fontWeight:700,lineHeight:1,marginBottom:6}}>$69,000</div>
+              <div style={{fontSize:11,color:`${CR}55`,marginBottom:18}}>in local economic impact · NWA region</div>
+              <div style={{display:"flex",justifyContent:"center",gap:mobile?14:28,flexWrap:"wrap"}}>
+                {[{l:"Families Impacted",v:"3"},{l:"Region",v:"NWA"},{l:"Est. Tax Contribution",v:"$8.3k"}].map(m=>(
+                  <div key={m.l} style={{textAlign:"center"}}>
+                    <div className="mono" style={{fontSize:16,color:GL,fontWeight:600}}>{m.v}</div>
+                    <div style={{fontSize:9,color:`${CR}44`}}>{m.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Per-talent wage cards */}
+            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:18}}>
+              {TALENTS.map((t,i)=>{
+                const lift=t.wageTo-t.wageFrom;
+                const pct=Math.round((lift/t.wageFrom)*100);
+                const barW=Math.round((lift/69)*100);
+                return(
+                  <div key={t.id} className="card" style={{padding:mobile?14:18}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                      <img src={`https://i.pravatar.cc/34?img=${20+i}`} style={{width:34,height:34,borderRadius:"50%",border:`2px solid ${G}44`}} alt={t.name}/>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:600,color:CR}}>{t.name}</div>
+                        <div style={{fontSize:10,color:`${CR}55`}}>Vouched by {t.scout}</div>
+                      </div>
+                      <div style={{textAlign:"right",flexShrink:0}}>
+                        <div className="mono" style={{fontSize:10,color:`${CR}33`,textDecoration:"line-through"}}>${t.wageFrom}k</div>
+                        <div className="mono" style={{fontSize:18,color:G,fontWeight:700}}>${t.wageTo}k</div>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <div style={{flex:1,height:5,background:NL,borderRadius:3,overflow:"hidden"}}>
+                        <div style={{width:`${barW}%`,height:"100%",background:`linear-gradient(90deg,${GD},${G},${GL})`,borderRadius:3}}/>
+                      </div>
+                      <span style={{fontSize:10,color:GL,fontWeight:600,flexShrink:0}}>+${lift}k</span>
+                      <span style={{fontSize:9,color:GHV,background:`${G}15`,padding:"1px 6px",borderRadius:3,flexShrink:0}}>+{pct}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Series A narrative */}
+            <div className="card" style={{padding:mobile?16:20,background:`${G}08`,border:`1px solid ${G}44`}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+                <div style={{width:22,height:22,background:`linear-gradient(135deg,${GD},${G})`,borderRadius:5,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10}}>📊</div>
+                <div style={{fontSize:9,letterSpacing:".12em",textTransform:"uppercase",color:GHV}}>Series A Investor Narrative</div>
+              </div>
+              <div style={{fontFamily:"Cormorant Garamond",fontSize:mobile?15:17,color:CR,lineHeight:1.78,marginBottom:16}}>
+                "NextLane isn't a hiring tool — it's a <span style={{color:GL}}>regional economic engine</span>. In Month 1, we generated <span style={{color:GL}}>$69,000 in projected wage increases</span> across just 3 placements in NWA. At 50 placements per month, that's <span style={{color:GL}}>$1.15M in annual wage lift</span> per cohort — compounding year over year as Scouts earn placement credits and reinvest them."
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:mobile?"1fr 1fr":"repeat(3,1fr)",gap:10}}>
+                {[{l:"Month 1 Wage Lift",v:"$69k",c:G},{l:"Proj. @ 50 placements/mo",v:"$1.15M/yr",c:GL},{l:"Multiplier per Scout",v:"7× wages",c:"#4CAF50"}].map(m=>(
+                  <div key={m.l} style={{background:NL,borderRadius:8,padding:"10px 12px",textAlign:"center"}}>
+                    <div className="mono" style={{fontSize:mobile?16:20,color:m.c,fontWeight:700,lineHeight:1,marginBottom:3}}>{m.v}</div>
+                    <div style={{fontSize:9,color:`${CR}44`}}>{m.l}</div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
