@@ -233,10 +233,10 @@ function QRUnboxFlow({mobile,setView,setTalentStartStep}){
   const tilt=useTilt(tiltRef);
 
   useEffect(()=>{
-    if(phase==="scan"){const t=setTimeout(()=>setPhase("ripple"),2200);return()=>clearTimeout(t);}
-    if(phase==="ripple"){const t=setTimeout(()=>setPhase("envelope"),900);return()=>clearTimeout(t);}
-    if(phase==="envelope"){const t=setTimeout(()=>setPhase("reveal"),1100);return()=>clearTimeout(t);}
-    if(phase==="reveal"){const t=setTimeout(()=>setPhase("landing"),1000);return()=>clearTimeout(t);}
+    if(phase==="scan"){const t=setTimeout(()=>setPhase("ripple"),4400);return()=>clearTimeout(t);}
+    if(phase==="ripple"){const t=setTimeout(()=>setPhase("envelope"),1800);return()=>clearTimeout(t);}
+    if(phase==="envelope"){const t=setTimeout(()=>setPhase("reveal"),2200);return()=>clearTimeout(t);}
+    if(phase==="reveal"){const t=setTimeout(()=>setPhase("landing"),2000);return()=>clearTimeout(t);}
   },[phase]);
 
   const content=(
